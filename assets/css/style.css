@@ -190,6 +190,11 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 }
 .tv-fallback {
   padding: 2.5rem 1.2rem; text-align: center; color: var(--muted); font-size: .9rem;
+  line-height: 1.7; max-width: 34rem; margin: 0 auto;
+}
+.tv-fallback code {
+  font-size: .85em; padding: .1em .35em; border-radius: 3px;
+  background: rgba(0, 0, 0, .05);
 }
 
 .tv-ui {

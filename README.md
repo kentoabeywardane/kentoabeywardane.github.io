@@ -75,4 +75,9 @@ python3 -m http.server 8787
 # then open http://127.0.0.1:8787/shepherd2-trajectory.html
 ```
 
-`index.html` still opens fine directly from disk.
+`index.html` still opens fine directly from disk. Opening
+`shepherd2-trajectory.html` from disk shows a short note saying to serve it
+instead, rather than sitting on "Loading trajectory…".
+
+This only affects local preview — on GitHub Pages everything is served over
+https and the viewer works normally.
