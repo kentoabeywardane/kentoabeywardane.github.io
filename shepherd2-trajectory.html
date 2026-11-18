@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watching ShEPhERD-2 generate a molecule</title>
+  <meta name="description" content="An interactive, precomputed reverse-diffusion trajectory from ShEPhERD-2: a molecule and its interaction profile condensing out of noise.">
+  <meta property="og:title" content="Watching ShEPhERD-2 generate a molecule">
+  <meta property="og:description" content="An interactive reverse-diffusion trajectory from ShEPhERD-2: a molecule and its interaction profile condensing out of noise.">
+  <meta property="og:image" content="assets/img/shepherd2.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="wrapper">
+
+  <header class="profile">
+    <div class="avatar monogram" aria-hidden="true">KA</div>
+    <h1 class="profile-name"><a href="index.html">Kento Abeywardane</a></h1>
+    <p class="profile-role">PhD Candidate</p>
+    <p class="profile-affil">
+      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a><br>
+      <a href="https://coley.mit.edu/">Coley Research Group</a>
+    </p>
+    <nav class="profile-links">
+      <a href="index.html">Home</a>
+      <a href="https://github.com/coleygroup/shepherd2">Code</a>
+      <a href="https://doi.org/10.64898/2026.09.10.750648">Paper</a>
+    </nav>
+  </header>
+
+  <main class="content">
+
+    <section>
+      <p class="post-back"><a href="index.html">&larr; Back</a></p>
+      <h2>Watching ShEPhERD-2 generate a molecule</h2>
+      <p class="post-meta">ShEPhERD-2 &middot; bioisosteric fragment merging &middot; interactive</p>
+
+      <p>
+        ShEPhERD-2 doesn't generate a molecule directly. It generates a molecule
+        <em>and</em> the interaction profile that molecule presents to a protein &mdash; its
+        electrostatic surface and its pharmacophores &mdash; jointly, in one reverse-diffusion
+        process. Below is one of those trajectories, precomputed and played back in the browser.
+      </p>
+      <p>
+        This particular run is a bioisosteric fragment merge: the model was asked for a single
+        molecule that reproduces the combined interaction profile of two separate crystallographic
+        fragments. Drag to rotate, scroll to zoom, scrub the slider to step through the denoising,
+        and toggle the three channels to see them independently.
+      </p>
+
+      <nav class="tv-tabs" id="tv-tabs" aria-label="Trajectory"></nav>
+      <p class="tv-note" id="tv-note"></p>
+
+      <div class="tv" id="tv">
+        <div class="tv-stage">
+          <p class="tv-fallback">Loading trajectory&hellip;</p>
+        </div>
+        <span class="tv-hint">drag to rotate &middot; scroll to zoom</span>
+      </div>
+
+      <ul class="tv-legend">
+        <li><span class="sw" style="background:#4c5057"></span>Molecule (x<sub>1</sub>)</li>
+        <li><span class="sw sw-grad"></span>ESP surface (x<sub>3</sub>): negative &rarr; positive</li>
+        <li><span class="sw" style="background:#cc99ff"></span>Hydrophobe</li>
+        <li><span class="sw" style="background:#333"></span>Aromatic</li>
+        <li><span class="sw" style="background:#d98000"></span>Ring normal</li>
+        <li><span class="sw" style="background:#008c8c"></span>Donor</li>
+        <li><span class="sw" style="background:#9e0859"></span>Acceptor</li>
+        <li><span class="sw" style="background:#00ff00"></span>Halogen</li>
+        <li><span class="sw" style="background:#0000ff"></span>Cation</li>
+        <li><span class="sw" style="background:#ff0000"></span>Anion</li>
+        <li><span class="sw" style="background:#ff8080"></span>Zn binder</li>
+      </ul>
+      <p class="caption">
+        360 denoising steps, shown every third step. Atom count changes between frames because
+        ShEPhERD-2 diffuses composition along with geometry &mdash; atoms resolve into and out of
+        existence until the molecule settles. Colors match the ChimeraX rendering used in the paper.
+      </p>
+
+      <h3>What you're looking at</h3>
+      <p>
+        <b>x<sub>1</sub></b> is the molecule itself: atom positions and identities. Bonds here are
+        drawn from interatomic distances, not predicted by the model, which is why they flicker
+        early in the trajectory and only lock in once the geometry is chemically sensible.
+      </p>
+      <p>
+        <b>x<sub>3</sub></b> is the electrostatic potential sampled on a shell around the molecule.
+        Blue is positive, red negative. Early on it's noise; by the end it traces
+        the molecule's actual charge distribution.
+      </p>
+      <p>
+        <b>x<sub>4</sub></b> is the pharmacophore set: typed interaction points with direction
+        vectors where direction matters (hydrogen-bond donors and acceptors, aromatic ring normals).
+        This is the channel that carries most of the conditioning signal &mdash; it's what lets you
+        ask for a molecule that makes a specific set of contacts without specifying the molecule.
+      </p>
+      <p class="links">
+        <a class="btn" href="https://doi.org/10.64898/2026.09.10.750648">Paper</a>
+        <a class="btn" href="https://github.com/coleygroup/shepherd2">Code</a>
+        <a class="btn" href="https://huggingface.co/kabeywar/shepherd2">Weights</a>
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+  import { mount } from './assets/js/traj-viewer.js';
+
+  /* Trajectories, in the order they appear in the picker.  Reorder this array
+     to reorder the tabs; add an entry (built with tools/build_traj.py) to add
+     another run.  Payloads load lazily -- only the selected one is fetched. */
+  const SCENES = [
+    { id: 'profile',    label: 'Interaction profile',
+      src: 'assets/data/traj-profile-5sry.js',  global: 'TRAJ_PROFILE_5SRY',
+      note: 'A single molecule and its interaction profile denoising together \u2014 the base behaviour everything else builds on.' },
+    { id: 'fragmerge1', label: 'Fragment merge \u00b7 round 1',
+      src: 'assets/data/traj-fragmerge-1.js',   global: 'TRAJ_FRAGMERGE_1',
+      note: 'Conditioned on the combined profile of two crystallographic fragments.' },
+    { id: 'fragmerge2', label: 'Fragment merge \u00b7 round 2',
+      src: 'assets/data/traj-fragmerge-2.js',   global: 'TRAJ_FRAGMERGE_2',
+      note: 'A second round of merging, taking a round-one product back into the model.' },
+  ];
+
+  const box = document.getElementById('tv');
+  const tabs = document.getElementById('tv-tabs');
+  const note = document.getElementById('tv-note');
+  const stage = () => box.querySelector('.tv-stage');
+  const loaded = new Map();
+  let viewer = null, current = null;
+
+  const loadScene = (sc) => loaded.get(sc.id) || new Promise((res, rej) => {
+    const el = document.createElement('script');
+    el.src = sc.src;
+    el.onload = () => window[sc.global] ? res(window[sc.global])
+                                        : rej(new Error('missing ' + sc.global));
+    el.onerror = () => rej(new Error('could not load ' + sc.src));
+    document.head.appendChild(el);
+  }).then(d => { loaded.set(sc.id, Promise.resolve(d)); return d; });
+
+  SCENES.forEach((sc, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tv-tab';
+    b.textContent = sc.label;
+    b.addEventListener('click', () => select(i));
+    tabs.appendChild(b);
+  });
+
+  async function select(i) {
+    const sc = SCENES[i];
+    if (current === i) return;
+    current = i;
+    [...tabs.children].forEach((b, j) => b.setAttribute('aria-current', j === i ? 'true' : 'false'));
+    note.textContent = sc.note;
+    stage().innerHTML = '<p class="tv-fallback">Loading trajectory&hellip;</p>';
+    try {
+      const data = await loadScene(sc);
+      if (current !== i) return;
+      if (viewer) { viewer.dispose(); viewer = null; }
+      viewer = mount(box, data);
+    } catch (err) {
+      console.error(err);
+      stage().innerHTML = '<p class="tv-fallback">Could not start the viewer. ' +
+        'It needs WebGL and a browser that supports ES modules.</p>';
+    }
+  }
+
+  select(0);
+</script>
+</body>
+</html>
