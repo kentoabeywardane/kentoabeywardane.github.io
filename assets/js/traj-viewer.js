@@ -88,21 +88,89 @@ export function mount(box, data, opts = {}) {
   const MAXB = MAXA * 4;
 
   /* ---------- scene ---------- */
-  /* frame the camera on the settled structure of the last frame */
+  /* Frame the camera on the settled structure of the last frame.  The radius
+     is a bounding sphere, not a bounding box, so the fit holds whatever
+     direction the camera ends up looking from. */
   let fitR = 1;
   {
     const f = nF - 1, a0 = x1o[f];
-    for (let i = 0; i < x1c[f]; i++)
-      for (let k = 0; k < 3; k++) fitR = Math.max(fitR, Math.abs(x1p[(a0 + i) * 3 + k] / S));
-    for (let i = 0; i < n3; i++)
-      for (let k = 0; k < 3; k++) fitR = Math.max(fitR, Math.abs(x3p[(f * n3 + i) * 3 + k] / S));
+    for (let i = 0; i < x1c[f]; i++) {
+      const x = x1p[(a0 + i) * 3] / S, y = x1p[(a0 + i) * 3 + 1] / S, z = x1p[(a0 + i) * 3 + 2] / S;
+      fitR = Math.max(fitR, Math.hypot(x, y, z));
+    }
+    for (let i = 0; i < n3; i++) {
+      const j = (f * n3 + i) * 3;
+      fitR = Math.max(fitR, Math.hypot(x3p[j] / S, x3p[j + 1] / S, x3p[j + 2] / S));
+    }
   }
   const FOV = 38;
-  const DIST = (fitR * 1.45) / Math.tan((FOV / 2) * Math.PI / 180);
+  const DIST = (fitR * 1.12) / Math.tan((FOV / 2) * Math.PI / 180);
+
+  /* ---------- opening viewpoint ----------
+     Molecules come out of the dump in an arbitrary orientation, and looking
+     at a flat molecule edge-on hides everything that makes it readable.  Take
+     the settled heavy atoms, find their best-fit plane, and start the camera
+     off that plane's normal: rings then face the viewer.  Dead-on is flat and
+     diagrammatic, so tilt away from the normal for a three-quarter view. */
+  function principalAxes() {
+    const f = nF - 1, a0 = x1o[f], na = x1c[f];
+    const pts = [];
+    for (let i = 0; i < na; i++) {
+      if (data.elements[x1e[a0 + i]] === 'H') continue;   /* H adds noise, not shape */
+      pts.push([x1p[(a0 + i) * 3] / S, x1p[(a0 + i) * 3 + 1] / S, x1p[(a0 + i) * 3 + 2] / S]);
+    }
+    if (pts.length < 3) return null;
+    const m = [0, 0, 0];
+    for (const p of pts) for (let k = 0; k < 3; k++) m[k] += p[k] / pts.length;
+    /* covariance */
+    const c = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (const p of pts)
+      for (let a = 0; a < 3; a++)
+        for (let b = 0; b < 3; b++) c[a][b] += (p[a] - m[a]) * (p[b] - m[b]) / pts.length;
+    /* Jacobi rotation: small, symmetric, converges in a handful of sweeps */
+    const v = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    for (let sweep = 0; sweep < 24; sweep++) {
+      let p = 0, q = 1, off = Math.abs(c[0][1]);
+      if (Math.abs(c[0][2]) > off) { p = 0; q = 2; off = Math.abs(c[0][2]); }
+      if (Math.abs(c[1][2]) > off) { p = 1; q = 2; off = Math.abs(c[1][2]); }
+      if (off < 1e-10) break;
+      const theta = (c[q][q] - c[p][p]) / (2 * c[p][q]);
+      const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+      const cs = 1 / Math.sqrt(t * t + 1), sn = t * cs;
+      for (let k = 0; k < 3; k++) {
+        const ckp = c[k][p], ckq = c[k][q];
+        c[k][p] = cs * ckp - sn * ckq; c[k][q] = sn * ckp + cs * ckq;
+      }
+      for (let k = 0; k < 3; k++) {
+        const cpk = c[p][k], cqk = c[q][k];
+        c[p][k] = cs * cpk - sn * cqk; c[q][k] = sn * cpk + cs * cqk;
+        const vkp = v[k][p], vkq = v[k][q];
+        v[k][p] = cs * vkp - sn * vkq; v[k][q] = sn * vkp + cs * vkq;
+      }
+    }
+    const order = [0, 1, 2].sort((a, b) => c[b][b] - c[a][a]);   /* large -> small */
+    const axis = (i) => new THREE.Vector3(v[0][order[i]], v[1][order[i]], v[2][order[i]]).normalize();
+    return { major: axis(0), mid: axis(1), normal: axis(2) };
+  }
+
+  const HOME = new THREE.Vector3(0, 0, DIST);
+  const HOME_UP = new THREE.Vector3(0, 1, 0);
+  {
+    const ax = principalAxes();
+    if (ax) {
+      /* Look down the plane normal, then tilt off it so the view reads as 3D.
+         The tilt is about the long axis, which keeps that axis across frame. */
+      const TILT = THREE.MathUtils.degToRad(opts.tilt ?? 22);
+      HOME.copy(ax.normal).applyAxisAngle(ax.major, TILT).multiplyScalar(DIST);
+      HOME_UP.copy(ax.mid).applyAxisAngle(ax.major, TILT).normalize();
+    }
+  }
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.5, 2000);
-  camera.position.set(0, 0, DIST);
+  camera.position.copy(HOME);
+  camera.up.copy(HOME_UP);
+  camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -230,7 +298,7 @@ export function mount(box, data, opts = {}) {
     const e0 = f * n3;
     for (let i = 0; i < n3; i++) {
       M.compose(A.set(x3p[(e0 + i) * 3] / S, x3p[(e0 + i) * 3 + 1] / S, x3p[(e0 + i) * 3 + 2] / S),
-                Q.identity(), V.setScalar(0.22));
+                Q.identity(), V.setScalar(0.15));
       esp.setMatrixAt(i, M);
       esp.setColorAt(i, espColor(x3e[e0 + i] / 127, C));
     }
@@ -339,7 +407,9 @@ export function mount(box, data, opts = {}) {
   }));
   $('[data-spin]').addEventListener('change', (e) => { spin = e.target.checked; });
   $('.tv-reset').addEventListener('click', () => {
-    controls.reset(); camera.position.set(0, 0, DIST); root.rotation.set(0, 0, 0);
+    controls.reset();
+    camera.position.copy(HOME); camera.up.copy(HOME_UP); camera.lookAt(0, 0, 0);
+    root.rotation.set(0, 0, 0);
   });
   box.addEventListener('keydown', (e) => {
     if (e.key === ' ') { e.preventDefault(); playBtn.click(); }
