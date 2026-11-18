@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aligning two molecules with shepherd-score</title>
-  <meta name="description" content="An interactive replay of 3D molecular alignment with shepherd-score: watch the optimizer overlay one molecule on another by volume, surface shape, or pharmacophores.">
-  <meta property="og:title" content="Aligning two molecules with shepherd-score">
-  <meta property="og:description" content="Watch shepherd-score align one molecule onto another by volume, surface shape, or pharmacophores, one optimizer step at a time.">
+  <title>shepherd-score demonstration</title>
+  <meta name="description" content="shepherd-score demonstration.">
+  <meta property="og:title" content="shepherd-score demonstration">
+  <meta property="og:description" content="shepherd-score demonstration.">
   <meta property="og:image" content="assets/img/shepherd-score.webp">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,11 +63,11 @@
 <div class="wrapper">
 
   <header class="profile">
-    <div class="avatar monogram" aria-hidden="true">KA</div>
+    <img class="avatar" src="assets/img/portrait.webp" alt="Kento Abeywardane" width="560" height="560">
     <h1 class="profile-name"><a href="index.html">Kento Abeywardane</a></h1>
     <p class="profile-role">PhD Candidate</p>
     <p class="profile-affil">
-      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a><br>
+      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a> and <a href="https://computationalengineering.mit.edu/">Computation</a><br>
       <a href="https://coley.mit.edu/">Coley Research Group</a>
     </p>
     <nav class="profile-links">
@@ -81,20 +81,13 @@
 
     <section>
       <p class="post-back"><a href="index.html">&larr; Back</a></p>
-      <h2>Aligning two molecules with shepherd-score</h2>
-      <p class="post-meta">An interactive replay of 3D similarity alignment</p>
+      <h2>3D molecular alignment with ShEPhERD-score</h2>
 
       <p>
-        Two molecules can look nothing alike as graphs and still fill the same space, present
-        the same surface, or point their hydrogen-bond donors and acceptors the same way.
-        shepherd-score measures that 3D similarity as a Tanimoto overlap of Gaussians placed on
-        a molecule's features, and finds the best overlay by optimizing a rigid rotation and
-        translation of one molecule against the other with gradient ascent.
-      </p>
-      <p>
-        Below, a fit molecule (<span style="color:#8a6fd8;font-weight:600">violet</span> carbons)
-        starts from the same pose, rotated 100&deg; and shifted 3.5&nbsp;&Aring; away from a good
-        overlay, and is aligned onto a fixed reference (grey carbons). Pick what to align on.
+        Aligning molecules in 3D to measure their similarity is a core operation in cheminformatics.
+        <a href="https://shepherd-score.readthedocs.io/">ShEPhERD-score</a> provides differentiable 3D similarity functions for
+        scoring and alignment across shape, electrostatic potential (ESP), pharmacophores, and their combinations.
+        Below, we demonstrate the rigid alignment of two molecules using three representations: volumetric shape, solvent-accessible surface, and pharmacophores.
       </p>
 
       <div class="tv-tabs" role="group" aria-label="Representation used for alignment">
@@ -110,25 +103,12 @@
       </div>
       <ul class="tv-legend" id="legend"></ul>
       <p class="caption">
-        Each frame is one Adam step (learning rate 0.1) on the SE(3) pose, from a single start
-        (<code>num_repeats=1</code>), until the score stops changing. The dashed line is the
-        best score the library finds with its default 50 random starts; every run here reaches it.
-        Space plays and pauses, the arrow keys step, and the score chart can be dragged to scrub.
+        Each frame is one Adam step during rigid optimization.
       </p>
 
-      <h3>What each representation sees</h3>
-      <ul>
-        <li><strong>Volume.</strong> A Gaussian on every heavy atom; the score is their
-          normalized overlap. Only the atoms are drawn, without hydrogens, since that is all it
-          scores. It rewards filling the same space, and nothing else.</li>
-        <li><strong>Surface.</strong> 200 points sampled on each molecule's solvent-accessible
-          surface. The score is the overlap of those point clouds, so it matches outer shape and
-          ignores what's inside.</li>
-        <li><strong>Pharmacophores.</strong> Acceptors, donors, aromatic rings, halogens and
-          hydrophobes, each a Gaussian at an anchor, the directional ones with a vector that has
-          to line up too. Only same-type features count. It keeps aligning longest of the three,
-          and lands on a different pose from the shape-based scores.</li>
-      </ul>
+      <p>
+        ShEPhERD-score contains many more scoring functions and alignment modes!
+      </p>
       <p class="av-mols" id="mols"></p>
 
       <p class="links">
@@ -175,8 +155,8 @@
 
   const NOTES = {
     vol_noH: 'Volume: Gaussian overlap of heavy atoms.',
-    surf: 'Surface: Gaussian overlap of 200 surface points per molecule.',
-    pharm: 'Pharmacophores: overlap of same-type features, weighted by how well their vectors agree.',
+    surf: 'Surface: Gaussian overlap of points sampled on the solvent-accessible surface.',
+    pharm: 'Pharmacophores: Gaussian overlap of same-type features, weighted by vector similarity.',
   };
   const base = sw(hex(REF_C), 'Reference carbon') + sw(hex(FIT_C), 'Fit carbon');
   const usedTypes = [...new Set([...data.ref.pharm.types, ...data.fit.pharm.types])].sort();
@@ -194,7 +174,7 @@
   document.getElementById('mols').innerHTML =
     `Reference: <code>${data.info.ref_smiles}</code><br>` +
     `Fit: <code>${data.info.fit_smiles}</code><br>` +
-    `Both from the MOSES test set. Volume ${scoreLine('vol_noH')}; surface ${scoreLine('surf')}; ` +
+    `Volume ${scoreLine('vol_noH')}; surface ${scoreLine('surf')}; ` +
     `pharmacophores ${scoreLine('pharm')}.`;
 
   const box = document.getElementById('align');

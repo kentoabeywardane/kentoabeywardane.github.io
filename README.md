@@ -29,8 +29,7 @@ Plain HTML in `index.html`, in document order: profile sidebar, About Me, News,
 Featured Work, Publications, Other Projects, Background. Colors, spacing, and type
 live in the token block at the top of `style.css`.
 
-- **Photo:** save one as `assets/img/portrait.jpg` and swap the `<div class="avatar monogram">`
-  for the commented-out `<img class="avatar" ...>` right above it.
+- **Photo:** `assets/img/portrait.webp`, a square 560x560 crop shown as a 140px circle.
 - **CV:** drop the PDF at `assets/Kento_Abeywardane_CV.pdf` and uncomment the CV link
   in `.profile-links`.
 - **News:** newest first; keep it to about five items.

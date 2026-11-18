@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kento Abeywardane</title>
-  <meta name="description" content="Kento Abeywardane - PhD candidate at MIT building interaction-aware generative models for 3D molecular design (ShEPhERD, ShEPhERD-2, ShEPhERD-score).">
+  <meta name="description" content="Kento Abeywardane - PhD candidate at MIT building interaction-aware generative models for 3D molecular design.">
   <meta property="og:title" content="Kento Abeywardane">
   <meta property="og:description" content="Interaction-aware generative models for molecular design. PhD candidate, MIT Chemical Engineering and Computation.">
   <meta property="og:image" content="assets/img/shepherd2.webp">
@@ -18,13 +18,11 @@
 
   <!-- ===================== profile column ===================== -->
   <header class="profile">
-    <!-- To use a photo, replace the <div class="avatar monogram"> below with:
-         <img class="avatar" src="assets/img/portrait.jpg" alt="Kento Abeywardane"> -->
-    <div class="avatar monogram" aria-hidden="true">KA</div>
+    <img class="avatar" src="assets/img/portrait.webp" alt="Kento Abeywardane" width="560" height="560">
     <h1 class="profile-name">Kento Abeywardane</h1>
     <p class="profile-role">PhD Candidate</p>
     <p class="profile-affil">
-      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a><br>
+      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a> and <a href="https://computationalengineering.mit.edu/">Computation</a><br>
       <a href="https://coley.mit.edu/">Coley Research Group</a>
     </p>
     <p class="profile-mail"><a href="mailto:kento@mit.edu">kento@mit.edu</a></p>
@@ -33,8 +31,6 @@
       <a href="https://github.com/kentoabeywardane">GitHub</a>
       <a href="https://www.linkedin.com/in/kentoabeywardane/">LinkedIn</a>
       <a href="https://x.com/kabeywar">X</a>
-      <!-- Drop a PDF at assets/Kento_Abeywardane_CV.pdf and uncomment:
-      <a href="assets/Kento_Abeywardane_CV.pdf">CV</a> -->
     </nav>
   </header>
 
@@ -45,7 +41,12 @@
       <h2>About Me</h2>
       <p>
         I'm a Chemical Engineering and Computation PhD candidate at MIT currently in the
-        <a href="https://coley.mit.edu/">Coley Research Group</a> working on 3D generative drug design.
+        <a href="https://coley.mit.edu/">Coley Research Group</a> working on 3D generative molecular design.
+        I have primarily focused on developing <b>interaction-aware generative models</b> to improve interaction
+        recapitulation and programmatic design of generated molecules. I have also developed, and continue
+        to maintain, a suite of tools for 3D rigid alignment and similarity scoring using 3D molecular
+        representations of interactions. I am passionate about developing tools that can help translate
+        computational designs into real-world applications.
       </p>
       <p>
         Previously, I graduated with a Master's in Data-Enabled Computational Engineering and Sciences
@@ -57,82 +58,73 @@
         accurate heats of formation for large molecules by utilizing the error-cancelling
         connectivity-based hierarchy (CBH) method.
       </p>
-      <p>
-        In the <a href="https://sites.brown.edu/aultlab/">Ault Fluids Lab</a> I worked on non-equilibrium
-        MD simulations to investigate diffusiophoresis of proteins and how that may impact transport,
-        stability, and function.
-      </p>
     </section>
 
-    <section id="news">
-      <h2>News</h2>
-      <ul class="news">
+    <section id="updates">
+      <h2>Select updates</h2>
+      <ul class="updates">
         <li><b>[Nov. 2026]</b> Presented ShEPhERD-2 at the <a href="https://www.epfl.ch/schools/sb/research/isic/news-events/machine-learning-seminars/">EPFL AI in Chemistry Seminar</a>.</li>
         <li><b>[Sept. 2026]</b> <a href="https://doi.org/10.64898/2026.09.10.750648">ShEPhERD-2</a> is out as a preprint, and I gave a talk on it at the Broad Institute ChemBio retreat.</li>
-        <li><b>[Mar. 2026]</b> Presented ShEPhERD at <a href="https://www.eyesopen.com/cup">OpenEye CUP XXV</a> in Santa Fe.</li>
+        <li><b>[Mar. 2026]</b> Presented at <a href="https://www.eyesopen.com/cup">OpenEye CUP XXV</a> in Santa Fe.</li>
+        <li><b>[June 2025]</b> Traveled to Cape Town, South Africa to lead a <a href="https://ersilia.gitbook.io/ai2050-h3d-in-house-workshop">workshop</a> on ML for medicinal chemistry at <a href="https://h3dfoundation.org/">H3D</a> and the University of Cape Town for AI2050.</li>
         <li><b>[Sept. 2025]</b> Named a <a href="https://computing.mit.edu/">Schwarzman College of Computing</a> Future Research Cohort Fellow, funded by Google.</li>
         <li><b>[Apr. 2025]</b> Presented <a href="https://openreview.net/forum?id=KSLkFYHlYg">ShEPhERD</a> as an <b>Oral</b> at ICLR 2025 in Singapore (top 1.8% of submissions).</li>
+        <li><b>[Mar. 2025]</b> Presented at <a href="https://acs.digitellinc.com/live/34/session/553318">ACS Spring 2025</a> in San Diego.</li>
       </ul>
     </section>
 
     <section id="research">
       <h2>Featured Work</h2>
-      <p class="lede">
-        A molecule's <em>interaction profile</em> &mdash; its shape, electrostatic surface, and directional
-        pharmacophores &mdash; is a practical, universal language for designing new molecules. ShEPhERD is
-        what that idea looks like in practice.
-      </p>
-
       <article class="feature" id="shepherd2">
-        <figure><img src="assets/img/shepherd2.webp" alt="ShEPhERD-2 overview: a hit molecule's interaction profile conditions generation, enabling hit expansion, scaffold elaboration, modality hopping, dual-target design, selectivity design, and optimization." loading="lazy" width="1600" height="830"></figure>
         <h3>ShEPhERD-2</h3>
-        <p class="feature-sub">Interaction profiles as a universal language for generative molecular design</p>
-        <p>
-          Samples diverse molecules conditioned on a target interaction profile, with precise control
-          through pharmacophore prioritization, substructure constraints, and the composition of multiple
-          profiles. That control is what makes bioisosteric fragment merging, dual-target design,
-          selectivity engineering, and peptide-to-small-molecule modality hopping possible in one model.
-        </p>
         <p class="links">
-          <a class="btn btn-lead" href="shepherd2-trajectory.html">Interactive demo</a>
+          <a class="btn btn-demo" href="shepherd2-trajectory.html">Interactive demo</a>
           <a class="btn" href="https://doi.org/10.64898/2026.09.10.750648">Paper</a>
           <a class="btn" href="https://github.com/coleygroup/shepherd2">Code</a>
           <a class="btn" href="https://huggingface.co/kabeywar/shepherd2">Weights</a>
         </p>
-      </article>
-
-      <article class="feature" id="shepherd">
-        <figure><img src="assets/img/shepherd.webp" alt="ShEPhERD jointly diffuses a 3D molecular structure together with its shape, electrostatic, and pharmacophore point clouds." loading="lazy" width="1400" height="280"></figure>
-        <h3>ShEPhERD <span class="badge">ICLR 2025 Oral</span></h3>
-        <p class="feature-sub">Diffusing shape, electrostatics, and pharmacophores for bioisosteric drug design</p>
+        <p class="feature-sub">Interaction profiles as a universal language for generative molecular design</p>
         <p>
-          An SE(3)-equivariant diffusion model over the joint distribution of 3D molecular structures and
-          their interaction profiles, so a generated molecule can reproduce how a reference behaves without
-          copying what it looks like.
+          Samples diverse molecules conditioned on a target interaction profile, with precise control
+          through pharmacophore prioritization, substructure constraints, and the composition of multiple
+          profiles. Enables iterative optimization for bioisosteric fragment merging, dual-target design,
+          selectivity engineering, and peptide-to-small-molecule modality hopping.
         </p>
-        <p class="links">
-          <a class="btn" href="https://openreview.net/forum?id=KSLkFYHlYg">Paper</a>
-          <a class="btn" href="https://arxiv.org/abs/2411.04130">arXiv</a>
-          <a class="btn" href="https://github.com/coleygroup/shepherd">Code</a>
-        </p>
+        <figure><img src="assets/img/shepherd2.webp" alt="ShEPhERD-2" loading="lazy" width="1600" height="830"></figure>
       </article>
 
       <article class="feature" id="shepherd-score">
-        <figure><img src="assets/img/shepherd-score.webp" alt="ShEPhERD-score decomposes a molecule into shape, electrostatics, and pharmacophores and scores 3D similarity through Gaussian point-cloud overlap." loading="lazy" width="1400" height="640"></figure>
         <h3>ShEPhERD-score</h3>
+        <p class="links">
+          <a class="btn btn-demo" href="shepherd-score-alignment.html">Interactive demo</a>
+          <a class="btn" href="https://shepherd-score.readthedocs.io/">Docs</a>
+          <a class="btn" href="https://pypi.org/project/shepherd-score/">PyPI</a>
+          <a class="btn" href="https://github.com/coleygroup/shepherd-score">Code</a>
+        </p>
         <p class="feature-sub">Fast, adaptable 3D alignment and scoring of molecular features</p>
         <p>
           The measuring stick for the rest of the family: conformer generation, interaction-profile
           extraction, differentiable 3D similarity, and alignment in PyTorch and JAX, together with the
           evaluation suite used to benchmark 3D generative models.
         </p>
-        <p class="links">
-          <a class="btn btn-lead" href="shepherd-score-alignment.html">Interactive demo</a>
-          <a class="btn" href="https://shepherd-score.readthedocs.io/">Docs</a>
-          <a class="btn" href="https://pypi.org/project/shepherd-score/">PyPI</a>
-          <a class="btn" href="https://github.com/coleygroup/shepherd-score">Code</a>
-        </p>
+        <figure><img src="assets/img/shepherd-score.webp" alt="ShEPhERD-score" loading="lazy" width="1400" height="640"></figure>
       </article>
+
+      <article class="feature" id="shepherd">
+        <h3>ShEPhERD <span class="badge">ICLR 2025 Oral</span></h3>
+        <p class="links">
+          <a class="btn" href="https://openreview.net/forum?id=KSLkFYHlYg">Paper</a>
+          <a class="btn" href="https://arxiv.org/abs/2411.04130">arXiv</a>
+          <a class="btn" href="https://github.com/coleygroup/shepherd">Code</a>
+        </p>
+        <p class="feature-sub">Diffusing shape, electrostatics, and pharmacophores for bioisosteric drug design</p>
+        <p>
+          An SE(3)-equivariant diffusion model over the joint distribution of 3D molecular structures and
+          their interaction profiles comprising shape, electrostatics, and pharmacophores.
+        </p>
+        <figure><img src="assets/img/shepherd.webp" alt="ShEPhERD" loading="lazy" width="1400" height="280"></figure>
+      </article>
+
     </section>
 
     <section id="publications">
@@ -214,37 +206,6 @@
 
     </section>
 
-    <section id="projects">
-      <h2>Other Projects</h2>
-      <ul class="projects">
-        <li>
-          <p class="proj-title"><a href="https://github.com/kentoabeywardane/autoCBH">autoCBH</a></p>
-          <p>Fragments molecular graphs into structure-conserving hierarchies and couples multi-fidelity
-            quantum chemistry with experimental data through error cancellation, giving accurate heats of
-            formation for molecules too large to compute directly. The subject of my master's thesis.</p>
-        </li>
-        <li>
-          <p class="proj-title">Generative screening for the &mu;-opioid receptor</p>
-          <p>Docking, scoring, and compound downselection workflows around a synthesis-constrained
-            generative model, carried through to experimental testing with collaborators at UCSF.</p>
-        </li>
-        <li>
-          <p class="proj-title">Cardiac safety modeling at Bristol Myers Squibb</p>
-          <p>An ODE model of a human ventricular cardiomyocyte in MATLAB/Simulink, calibrated across a
-            virtual population of cells to predict drug effects for cardiac toxicity screening.</p>
-        </li>
-        <li>
-          <p class="proj-title">Protein diffusiophoresis</p>
-          <p>Non-equilibrium molecular dynamics studying how salt gradients drive protein transport, and
-            what that means for stability and function. Ault Fluids Lab, Brown University.</p>
-        </li>
-        <li>
-          <p class="proj-title"><a href="https://github.com/kentoabeywardane/H2O2-combustion-reactors">Catalytic combustion reactors</a></p>
-          <p>1D plug-flow and 2D rectangular reactor models for hydrogen&ndash;oxygen catalytic combustion.</p>
-        </li>
-      </ul>
-    </section>
-
     <section id="background">
       <h2>Background</h2>
       <ul class="bg-list">
@@ -254,9 +215,8 @@
       </ul>
       <p class="muted small">
         Schwarzman College of Computing Future Research Cohort Fellow (2025&ndash;26) &middot;
-        Joseph Kestin Award of Excellence &middot; Outstanding Chemical Engineering Senior Award, Brown
-        Engineering (2022) &middot; Teaching assistant for Machine Learning for Molecular Engineering &middot;
-        Research mentor to five undergraduate and rotation students.
+        Joseph Kestin Award of Excellence (2022) &middot; Outstanding Chemical Engineering Senior Award, Brown
+        Engineering (2022)
       </p>
     </section>
 

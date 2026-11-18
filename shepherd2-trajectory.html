@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Growing a ligand out of fragments with ShEPhERD-2</title>
-  <meta name="description" content="An interactive walkthrough of bioisosteric fragment merging with ShEPhERD-2: crystallographic fragments, their interaction profiles, and two rounds of generation, in the binding site.">
-  <meta property="og:title" content="Growing a ligand out of fragments with ShEPhERD-2">
-  <meta property="og:description" content="An interactive walkthrough of bioisosteric fragment merging with ShEPhERD-2, in the binding site of the D68 3C protease.">
+  <title>ShEPhERD-2 demonstration</title>
+  <meta name="description" content="ShEPhERD-2 demonstration.">
+  <meta property="og:title" content="ShEPhERD-2 demonstration">
+  <meta property="og:description" content="ShEPhERD-2 demonstration.">
   <meta property="og:image" content="assets/img/shepherd2.webp">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,11 +39,11 @@
 <div class="wrapper">
 
   <header class="profile">
-    <div class="avatar monogram" aria-hidden="true">KA</div>
+    <img class="avatar" src="assets/img/portrait.webp" alt="Kento Abeywardane" width="560" height="560">
     <h1 class="profile-name"><a href="index.html">Kento Abeywardane</a></h1>
     <p class="profile-role">PhD Candidate</p>
     <p class="profile-affil">
-      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a><br>
+      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a> and <a href="https://computationalengineering.mit.edu/">Computation</a><br>
       <a href="https://coley.mit.edu/">Coley Research Group</a>
     </p>
     <nav class="profile-links">
@@ -57,29 +57,27 @@
 
     <section>
       <p class="post-back"><a href="index.html">&larr; Back</a></p>
-      <h2>Growing a ligand out of fragments</h2>
-      <p class="post-meta">ShEPhERD-2 &middot; bioisosteric fragment merging &middot; interactive</p>
+      <h2>Bioisosteric fragment merging with ShEPhERD-2</h2>
 
       <p>
-        ShEPhERD-2 doesn't generate a molecule directly. It generates a molecule
-        <em>and</em> the interaction profile that molecule presents to a protein &mdash; its
-        electrostatic surface and its pharmacophores &mdash; jointly, in one reverse-diffusion
-        process. That makes a particular kind of design problem tractable: you can hand it an
-        interaction profile assembled from pieces, and ask for one molecule that satisfies all
-        of it.
+        An <b>interaction profile</b> comprises a molecule's 3D shape, electrostatics, and
+        pharmacophores. ShEPhERD-2 learns the joint distribution of a molecule and its
+        interaction profile which enables practitioners to design molecules conditioned on
+        a desired set of interactions.
       </p>
       <p>
-        Below is that idea run end to end against the
-        <a href="https://www.rcsb.org/structure/8CNX">D68 3C protease</a>. Several fragments
-        were soaked into the same binding site; two of them are merged into one generated
-        molecule, and that product is then merged with a third. Walk the seven stages with the
-        timeline under the viewer. Everything sits in the crystal frame throughout, so nothing
-        is realigned between stages &mdash; the overlays line up because they genuinely do.
+        One application is bioisosteric fragment merging. Fragment soaking screens identify
+        weak binders which must be evolved into larger, druglike molecules. In this example,
+        we demonstrate how interaction profiles from multiple fragments can be composed to
+        condition ShEPhERD-2 and generate a single molecule that recapitulates the interactions
+        of the original fragments. In our <a href="https://doi.org/10.64898/2026.09.10.750648">preprint</a>,
+        we demonstrate how this approach can utilize computational feedback from docking or co-folding
+        for optimization.
       </p>
       <p>
-        Drag to rotate, scroll to zoom. Stages <b>3</b> and <b>6</b> are the generation
-        trajectories: their chip opens into a slider you can scrub, pause and step through
-        with the arrow keys.
+        Below is a visualization of this procedure with the D68 3C protease crystal structure
+        from <a href="https://fragalysis.diamond.ac.uk/">Fragalysis</a>
+        which contains three fragments from a fragment soaking screen.
       </p>
 
       <div class="tv" id="evo">
@@ -96,59 +94,12 @@
         <li><span class="sw" style="background:#4c5057"></span>Generated molecule</li>
         <li><span class="sw sw-grad"></span>ESP surface (x<sub>3</sub>): negative &rarr; positive</li>
       </ul>
-      <p class="caption">
-        Carbons are coloured by which structure an atom belongs to; heteroatoms keep their
-        usual CPK colours in every structure, which is what makes the overlays comparable.
-        Hydrogens are hidden by default &mdash; the toggle brings them back. Each generation
-        runs 400 denoising steps, played back at 121 sampled frames.
-      </p>
 
-      <h3>What each stage shows</h3>
-      <ol class="stage-list">
-        <li><b>Bound fragments.</b> Three fragments from a crystallographic screen (8, 10 and
-          12 in the screen's own numbering, called 1, 2 and 3 here), each sitting in the same
-          pocket and each making only a handful of contacts. The ribbon is the apo protein;
-          it fades out with distance from the site so it stays context rather than clutter.</li>
-        <li><b>Pick 1 and 2.</b> These two occupy neighbouring subsites; the third is set
-          aside. Their interaction profiles &mdash; the ESP surface and the typed
-          pharmacophores &mdash; are what gets handed to the model, not their atoms.</li>
-        <li><b>Merge round 1.</b> The joint reverse diffusion, conditioned on the combined
-          profile. Only the atoms are drawn: the molecule's own profile denoises alongside
-          them, but for most of the run it is still noise and only hides what it surrounds.
-          Bonds are drawn from interatomic distances rather than predicted, which is
-          why they flicker early and only lock in once the geometry is chemically sensible;
-          the atom count moves too, because composition is diffused along with coordinates.</li>
-        <li><b>Generated merge.</b> The product over the two fragments it came from. Note
-          that it isn't a linker bridging them &mdash; it's a single scaffold that happens to
-          land the same contacts.</li>
-        <li><b>Pick 3.</b> The third fragment occupies a subsite the round-one molecule
-          doesn't reach.</li>
-        <li><b>Merge round 2.</b> The round-one product goes back in as input, together
-          with fragment 3's profile.</li>
-        <li><b>Final molecule.</b> One molecule over all three starting fragments.</li>
-      </ol>
-
-      <h3>The three channels</h3>
+      <h3>Conditioning on a single interaction profile</h3>
       <p>
-        <b>x<sub>1</sub></b> is the molecule itself: atom positions and identities.
-        <b>x<sub>3</sub></b> is the electrostatic potential sampled on a shell around it &mdash;
-        blue positive, red negative. <b>x<sub>4</sub></b> is the pharmacophore set: typed
-        interaction points with direction vectors where direction matters (donors, acceptors,
-        aromatic ring normals). x<sub>4</sub> carries most of the conditioning signal; it is
-        what lets you ask for a molecule that makes a specific set of contacts without
-        specifying the molecule.
-      </p>
-      <p>
-        The <b>Interaction profile</b> toggle shows x<sub>3</sub> and x<sub>4</sub> for
-        whichever structures the current stage is about. It comes on by itself where the
-        profile is the point, and off at the overlay stages, where the atoms are. At the two
-        generation stages it is greyed out: those carry atoms only.
-      </p>
-
-      <h3>A single trajectory, on its own</h3>
-      <p>
-        For a closer look at one reverse-diffusion run without the rest of the story around
-        it &mdash; a different target, one molecule, all three channels at once:
+        Here we generate a molcule conditioned on a single interaction profile extracted
+        from a reference compound. The generated molecule preserves the interactions
+        while being chemically diverse.
       </p>
 
       <div class="tv" id="tv">
