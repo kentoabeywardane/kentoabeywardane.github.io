@@ -82,7 +82,7 @@ export function mount(box, data, opts = {}) {
     }
   }
   const FOV = 38;
-  const DIST = (fitR * 0.86) / Math.tan((FOV / 2) * Math.PI / 180);
+  const DIST = (fitR * 0.78) / Math.tan((FOV / 2) * Math.PI / 180);
 
   /* ---------- opening viewpoint ----------
      Look from the direction that spreads the aligned heavy atoms furthest
@@ -311,7 +311,10 @@ export function mount(box, data, opts = {}) {
   let playing = false, speed = 1, last = 0;
   const FPS = 30;
   const P = () => poses[mode];
-  const yOf = (s) => 100 - s * 100;   /* score axis is fixed 0..1 for every mode */
+  /* score axis is fixed at 0..0.8 for every mode so the three runs compare at a
+     glance; no score in this payload comes close to the top */
+  const Y_MAX = 0.8;
+  const yOf = (s) => 100 - Math.min(1, s / Y_MAX) * 100;
 
   function applyLayers() {
     for (const m of [ref, fit]) {

@@ -103,7 +103,12 @@ class Palette:
 
 
 def pack_structure(el, xyz, bonds, s3, s4, a4, center, pal):
-    """One frame, in the layout the viewer reads for both statics and frames."""
+    """One frame, in the layout the viewer reads for both statics and frames.
+
+    Pass s3 as None to pack the atoms alone: the profile channels are then
+    left out of the payload entirely and the viewer draws no profile layers
+    for that structure.
+    """
     def q(p):
         return np.round((np.asarray(p, dtype=np.float64) - center) * POS_SCALE).astype(np.int16)
 
@@ -115,6 +120,9 @@ def pack_structure(el, xyz, bonds, s3, s4, a4, center, pal):
     }
     if bonds:
         out['x1']['bonds'] = b64(np.array(bonds, np.uint16).reshape(-1, 2))
+
+    if s3 is None:
+        return out
 
     pos3 = np.array([s[1] for s in s3]) if s3 else np.zeros((0, 3))
     esp = np.array([s[0][2] - s[0][0] for s in s3]) if s3 else np.zeros(0)
@@ -288,12 +296,14 @@ def main():
         print(f'  {key:8s} {len(el):3d} atoms, {len(s3)} ESP pts, '
               f'{len(s4)} pharmacophores, {len(a4)} vectors')
 
-    # round 2 has no .sdf -- its product is the last frame of its own trajectory
-    s3, _ = read_bild(os.path.join(D, 'sample_round_2', '359_frame_x3.bild'))
-    s4, a4 = read_bild(os.path.join(D, 'sample_round_2', '359_frame_x4.bild'))
-    out['structures']['merged2'] = pack_structure(r2_el, r2_xyz, None, s3, s4, a4, center, pal)
-    print(f'  merged2  {len(r2_el):3d} atoms, {len(s3)} ESP pts, '
-          f'{len(s4)} pharmacophores, {len(a4)} vectors')
+    # Round 2 has no .sdf -- its product is the last frame of its own
+    # trajectory, and so is the only profile it could carry: the last step of a
+    # denoising run rather than a profile computed from a finished molecule.
+    # It is not the same object as a fragment's measured profile, so it is left
+    # out and the final stage shows the molecule alone.
+    out['structures']['merged2'] = pack_structure(r2_el, r2_xyz, None, None, None, None,
+                                                  center, pal)
+    print(f'  merged2  {len(r2_el):3d} atoms, no profile')
 
     trajs = {
         'evo-traj-1.js': ('EVO_TRAJ_1', os.path.join(D, 'sample_0', 'x')),
