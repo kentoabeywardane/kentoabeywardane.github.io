@@ -27,7 +27,7 @@
        serial round trips before the first frame.  Preloading makes them one. -->
   <link rel="modulepreload" href="assets/js/traj-viewer.js">
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" crossorigin>
-  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/TrackballControls.js" crossorigin>
   <link rel="preload" as="script" href="assets/data/traj-profile-5sry.js">
 </head>
 <body>
@@ -92,7 +92,7 @@
         <li><span class="sw" style="background:#ff8080"></span>Zn binder</li>
       </ul>
       <p class="caption">
-        360 denoising steps, shown every third step. Atom count changes between frames because
+        400 denoising steps, played back at 121 sampled frames. Atom count changes between frames because
         ShEPhERD-2 diffuses composition along with geometry &mdash; atoms resolve into and out of
         existence until the molecule settles. Colors match the ChimeraX rendering used in the paper.
       </p>

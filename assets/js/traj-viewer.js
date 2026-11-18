@@ -6,7 +6,9 @@
    Mount with:  TrajViewer.mount(containerEl, window.SHEPHERD2_TRAJ)
 ---------------------------------------------------------------------------- */
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+/* Trackball rather than Orbit: OrbitControls pins an up-axis, so the view
+   locks up at the poles and the molecule cannot be tumbled freely. */
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
 /* ---------- element styling (CPK, slightly desaturated) ---------- */
 const ELEM = {
@@ -96,7 +98,7 @@ export function mount(box, data, opts = {}) {
       for (let k = 0; k < 3; k++) fitR = Math.max(fitR, Math.abs(x3p[(f * n3 + i) * 3 + k] / S));
   }
   const FOV = 38;
-  const DIST = (fitR * 1.12) / Math.tan((FOV / 2) * Math.PI / 180);
+  const DIST = (fitR * 1.45) / Math.tan((FOV / 2) * Math.PI / 180);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.5, 2000);
@@ -108,10 +110,25 @@ export function mount(box, data, opts = {}) {
   host.appendChild(renderer.domElement);
   renderer.domElement.classList.add('tv-canvas');
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x4a4f58, 1.5));
-  const key = new THREE.DirectionalLight(0xffffff, 1.9); key.position.set(4, 6, 9);
-  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.7); fill.position.set(-7, -3, -5);
-  scene.add(key, fill);
+  /* Lighting rides on the camera, so whichever way the molecule is turned the
+     face you are looking at is the face that is lit.  World-fixed lights leave
+     a dark side as soon as you rotate past them.  Directional lights aim at
+     their target, so the targets are parented to the camera as well -- that
+     keeps the whole rig in camera space. */
+  scene.add(camera);
+  const rig = new THREE.Group();
+  camera.add(rig);
+  const addLight = (color, intensity, pos) => {
+    const l = new THREE.DirectionalLight(color, intensity);
+    l.position.set(pos[0], pos[1], pos[2]);
+    l.target.position.set(0, 0, -1);
+    rig.add(l, l.target);
+  };
+  addLight(0xffffff, 1.55, [0.5, 0.7, 0.3]);    /* key, over the viewer's shoulder */
+  addLight(0xcfdcf2, 0.75, [-0.85, -0.4, 0.25]); /* fill, opposite and cooler */
+  addLight(0xffffff, 0.5, [0, 0.35, -2.5]);      /* rim, picks out the silhouette */
+  /* soft omnidirectional base so nothing ever goes fully black */
+  scene.add(new THREE.HemisphereLight(0xf4f6f9, 0x9aa1aa, 1.15));
 
   const root = new THREE.Group();
   scene.add(root);
@@ -141,12 +158,17 @@ export function mount(box, data, opts = {}) {
   root.add(groups.x1, groups.x3, groups.x4);
   for (const m of [atoms, bonds, esp, pharm, shafts, heads]) m.frustumCulled = false;
 
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enablePan = false;
+  const controls = new TrackballControls(camera, renderer.domElement);
+  controls.rotateSpeed = 3.2;
+  controls.zoomSpeed = 1.1;
+  controls.noPan = true;
+  controls.staticMoving = false;
+  controls.dynamicDampingFactor = 0.14;
   controls.minDistance = DIST * 0.3;
   controls.maxDistance = DIST * 3;
+  /* TrackballControls binds A/S/D on the window by default; this page should
+     not swallow those keys. */
+  controls.keys = [];
 
   /* ---------- per-frame geometry ---------- */
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion();
@@ -260,7 +282,7 @@ export function mount(box, data, opts = {}) {
       </button>
       <input class="tv-slider" type="range" min="0" max="${nF - 1}" value="0" step="1"
              aria-label="Diffusion step">
-      <span class="tv-step" aria-live="off">step 0</span>
+      <span class="tv-step" aria-live="off">step 1</span>
     </div>
     <div class="tv-row tv-toggles">
       <label><input type="checkbox" data-layer="x1" checked> Molecule</label>
@@ -283,12 +305,21 @@ export function mount(box, data, opts = {}) {
   let frame = 0, playing = false, spin = false, speed = 1, last = 0, acc = 0;
   const FPS = 28;
 
+  /* The readout counts the denoising schedule, not the dumped frames: the
+     first frame is step 1 and the last is DISPLAY_STEPS, with the dumped
+     frames spread linearly in between. */
+  const DISPLAY_STEPS = opts.displaySteps || 400;
+  const srcLast = (data.srcFrames ? data.srcFrames - 1 : nF - 1) || 1;
+  const stepLabel = (f) => {
+    const t = data.frameIndex ? data.frameIndex[f] : f;
+    return Math.round(1 + (t / srcLast) * (DISPLAY_STEPS - 1));
+  };
+
   function setFrame(f, fromSlider) {
     frame = Math.max(0, Math.min(nF - 1, f | 0));
     drawFrame(frame);
     if (!fromSlider) slider.value = frame;
-    const t = data.frameIndex ? data.frameIndex[frame] : frame;
-    stepOut.textContent = `step ${t} / ${data.srcFrames ? data.srcFrames - 1 : nF - 1}`;
+    stepOut.textContent = `step ${stepLabel(frame)} / ${DISPLAY_STEPS}`;
   }
   function setPlaying(p) {
     playing = p;
@@ -324,6 +355,7 @@ export function mount(box, data, opts = {}) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    controls.handleResize();   /* TrackballControls caches the element rect */
   }
   const ro = new ResizeObserver(resize); ro.observe(host);
   resize();
