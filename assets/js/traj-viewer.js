@@ -108,10 +108,19 @@ export function mount(box, data, opts = {}) {
 
   /* ---------- opening viewpoint ----------
      Molecules come out of the dump in an arbitrary orientation, and looking
-     at a flat molecule edge-on hides everything that makes it readable.  Take
-     the settled heavy atoms, find their best-fit plane, and start the camera
-     off that plane's normal: rings then face the viewer.  Dead-on is flat and
-     diagrammatic, so tilt away from the normal for a three-quarter view. */
+     at a flat molecule edge-on hides everything that makes it readable.  The
+     opening camera is chosen from the settled heavy atoms in three steps:
+
+       1. best-fit plane, which fixes which *face* we open on (opts.side);
+       2. view direction near that normal that spreads the atoms furthest
+          apart on screen, so as few as possible hide behind each other;
+       3. roll, so the long axis lies across the frame and the bend in the
+          ring system points down rather than up.
+
+     Measured on the profile trajectory, the closest pair of projected atoms
+     sits 0.22 A apart looking straight down the normal and 0.47 A at a 22
+     degree tilt -- spreading the atoms and tilting for a three-quarter view
+     want the same thing, they don't trade off. */
   function principalAxes() {
     const f = nF - 1, a0 = x1o[f], na = x1c[f];
     const pts = [];
@@ -150,7 +159,56 @@ export function mount(box, data, opts = {}) {
     }
     const order = [0, 1, 2].sort((a, b) => c[b][b] - c[a][a]);   /* large -> small */
     const axis = (i) => new THREE.Vector3(v[0][order[i]], v[1][order[i]], v[2][order[i]]).normalize();
-    return { major: axis(0), mid: axis(1), normal: axis(2) };
+    return {
+      major: axis(0), mid: axis(1), normal: axis(2),
+      pts: pts.map((p) => new THREE.Vector3(p[0] - m[0], p[1] - m[1], p[2] - m[2])),
+    };
+  }
+
+  /* How well a view direction separates the atoms on screen.  Sum of
+     1/(distance) over every projected pair: it blows up when two atoms land
+     on top of each other, so the maximum is the direction with the least
+     overlap.  Lower is better. */
+  function crowding(pts, dir) {
+    const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+    e1.set(0, 0, 1);
+    if (Math.abs(dir.z) > 0.9) e1.set(1, 0, 0);
+    e1.cross(dir).normalize();
+    e2.crossVectors(dir, e1).normalize();
+    const n = pts.length, a = new Float64Array(n), b = new Float64Array(n);
+    for (let i = 0; i < n; i++) { a[i] = pts[i].dot(e1); b[i] = pts[i].dot(e2); }
+    let sum = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++) {
+        const dx = a[i] - a[j], dy = b[i] - b[j];
+        sum += 1 / (Math.sqrt(dx * dx + dy * dy) + 0.25);
+      }
+    return sum;
+  }
+
+  /* Least-squares fit of perp = c0 + c1*t + c2*t^2; only the sign of c2 is
+     used, to tell a molecule that sags in the middle from one that arches. */
+  function curvature(t, perp) {
+    const M = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+    for (let i = 0; i < t.length; i++) {
+      const p = [1, t[i], t[i] * t[i]];
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) M[r][c] += p[r] * p[c];
+        M[r][3] += p[r] * perp[i];
+      }
+    }
+    for (let col = 0; col < 3; col++) {           /* Gaussian elimination */
+      let piv = col;
+      for (let r = col + 1; r < 3; r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+      if (Math.abs(M[piv][col]) < 1e-12) return 0;
+      [M[col], M[piv]] = [M[piv], M[col]];
+      for (let r = 0; r < 3; r++) {
+        if (r === col) continue;
+        const k = M[r][col] / M[col][col];
+        for (let c = col; c < 4; c++) M[r][c] -= k * M[col][c];
+      }
+    }
+    return M[2][3] / M[2][2];
   }
 
   const HOME = new THREE.Vector3(0, 0, DIST);
@@ -158,15 +216,54 @@ export function mount(box, data, opts = {}) {
   {
     const ax = principalAxes();
     if (ax) {
-      /* Look down the plane normal, then tilt off it so the view reads as 3D.
-         The tilt is about the long axis, which keeps that axis across frame. */
-      const TILT = THREE.MathUtils.degToRad(opts.tilt ?? 22);
-      /* The plane has two faces and the eigenvector's sign is arbitrary;
-         opts.side picks which one to open on. */
-      const SIDE = opts.side ?? -1;
-      HOME.copy(ax.normal).multiplyScalar(SIDE)
-          .applyAxisAngle(ax.major, TILT).multiplyScalar(DIST);
-      HOME_UP.copy(ax.mid).applyAxisAngle(ax.major, TILT).normalize();
+      /* The plane has two faces and the eigenvector's sign is arbitrary, so
+         anchor the search to one of them: opts.side picks which. */
+      const SIDE = (opts.side ?? 1) < 0 ? -1 : 1;
+      const face = ax.normal.clone().multiplyScalar(SIDE);
+
+      /* Search a cap of directions around that face normal -- wide enough to
+         find a good three-quarter angle, narrow enough that the rings still
+         face the viewer rather than turning edge-on. */
+      const MAXTILT = THREE.MathUtils.degToRad(opts.maxTilt ?? 40);
+      const dir = face.clone();
+      let bestScore = crowding(ax.pts, dir);
+      const cand = new THREE.Vector3();
+      const GOLD = Math.PI * (1 + Math.sqrt(5));
+      for (let i = 0; i < 700; i++) {
+        /* even cap sampling: polar angle from the cosine, azimuth golden */
+        const cz = 1 - (i / 700) * (1 - Math.cos(MAXTILT));
+        const sr = Math.sqrt(Math.max(0, 1 - cz * cz)), az = GOLD * i;
+        cand.copy(face).multiplyScalar(cz)
+            .addScaledVector(ax.major, sr * Math.cos(az))
+            .addScaledVector(ax.mid, sr * Math.sin(az))
+            .normalize();
+        const s = crowding(ax.pts, cand);
+        if (s < bestScore) { bestScore = s; dir.copy(cand); }
+      }
+
+      /* Roll: put the long axis across the frame, then check which way the
+         molecule bends.  perp = c0 + c1*t + c2*t^2 over the projected atoms;
+         c2 > 0 is a sag -- ends high, middle low -- which is the requested
+         "bend towards the bottom".  If it arches instead, spin 180 in plane. */
+      const e1 = new THREE.Vector3(0, 0, 1);
+      if (Math.abs(dir.z) > 0.9) e1.set(1, 0, 0);
+      e1.cross(dir).normalize();
+      const e2 = new THREE.Vector3().crossVectors(dir, e1).normalize();
+      let sxx = 0, syy = 0, sxy = 0;
+      for (const p of ax.pts) {
+        const a = p.dot(e1), b = p.dot(e2);
+        sxx += a * a; syy += b * b; sxy += a * b;
+      }
+      const th = 0.5 * Math.atan2(2 * sxy, sxx - syy);   /* 2x2 PCA, closed form */
+      const right = e1.clone().multiplyScalar(Math.cos(th))
+                      .addScaledVector(e2, Math.sin(th)).normalize();
+      const up = new THREE.Vector3().crossVectors(dir, right).normalize();
+      const t = [], perp = [];
+      for (const p of ax.pts) { t.push(p.dot(right)); perp.push(p.dot(up)); }
+      if (curvature(t, perp) < 0) up.negate();           /* arching -> flip */
+
+      HOME.copy(dir).multiplyScalar(DIST);
+      HOME_UP.copy(up);
     }
   }
 
