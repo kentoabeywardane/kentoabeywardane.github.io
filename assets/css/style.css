@@ -278,3 +278,135 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 .tv-note { font-size: .82rem; color: var(--muted); margin: 0 0 .1rem; min-height: 1.3em; }
 .tv-tabs + .tv-note + .tv { margin-top: .9rem; }
 .btn-lead { border-color: var(--link); color: var(--link); font-weight: 500; }
+
+/* ============ ligand evolution viewer ============
+   A seven-stage timeline where two of the stages are animations.  Those two
+   carry a slider that lives as a thumbnail progress bar while the stage is
+   closed and widens into a usable control when it opens, so the whole story
+   stays on one line and the stage you are actually in gets the room. */
+.evo-ui {
+  border-top: 1px solid var(--rule);
+  padding: .65rem .7rem .7rem;
+  display: flex; flex-direction: column; gap: .55rem;
+  background: var(--bg);
+}
+.evo-timeline {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem;
+}
+.evo-stage {
+  /* flex: none so a tight row wraps the next chip away instead of squeezing
+     this one; max-width keeps that from pushing the page wider than the
+     screen, and the track inside absorbs the squeeze when it has to */
+  display: flex; align-items: center; flex: none; max-width: 100%;
+  border: 1px solid var(--rule); border-radius: 999px;
+  background: var(--bg);
+  transition: border-color .2s, background .2s;
+}
+.evo-stage:hover { border-color: var(--link); }
+.evo-stage.is-active { border-color: var(--fg-strong); background: var(--fg-strong); }
+
+.evo-chip {
+  font: inherit; font-size: .76rem; font-weight: 500;
+  color: var(--fg); background: none; border: 0; border-radius: 999px;
+  padding: .24rem .62rem; cursor: pointer; line-height: 1.5;
+  display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
+}
+.evo-stage.is-active .evo-chip { color: var(--bg); }
+.evo-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.15rem; height: 1.15rem; border-radius: 50%; flex: none;
+  font-size: .66rem; font-weight: 600;
+  background: var(--tile); color: var(--fg-strong);
+}
+.evo-stage.is-active .evo-num { background: var(--bg); color: var(--fg-strong); }
+
+/* the transport that grows out of an animation stage */
+.evo-track {
+  position: relative; display: flex; align-items: center; gap: .4rem;
+  /* shrinkable, with min-width 0: when the row is tight the slider gives up
+     space instead of the track clipping the frame counter off its right end */
+  width: 2.7rem; flex: 0 1 auto; min-width: 0; overflow: hidden;
+  padding-right: .35rem;
+  transition: width .42s cubic-bezier(.4, 0, .2, 1);
+}
+.evo-stage.is-active .evo-track { width: min(21rem, 52vw); }
+.evo-mini {
+  position: absolute; left: .1rem; right: .45rem; top: 50%;
+  height: 4px; margin-top: -2px; border-radius: 999px;
+  background: var(--rule); transition: opacity .2s;
+}
+.evo-mini i {
+  display: block; height: 100%; width: var(--p, 0%);
+  border-radius: 999px; background: var(--link);
+}
+.evo-stage.is-active .evo-mini { opacity: 0; }
+
+.evo-play, .evo-slider, .evo-step {
+  opacity: 0; pointer-events: none; transition: opacity .22s .1s;
+}
+.evo-stage.is-active .evo-play,
+.evo-stage.is-active .evo-slider,
+.evo-stage.is-active .evo-step { opacity: 1; pointer-events: auto; }
+
+.evo-play {
+  flex: none; width: 1.5rem; height: 1.5rem; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--bg); color: var(--fg-strong);
+}
+.evo-ico {
+  width: 0; height: 0; border-style: solid; margin-left: 2px;
+  border-width: 4.5px 0 4.5px 7.5px;
+  border-color: transparent transparent transparent currentColor;
+}
+.evo-stage.is-playing .evo-ico {
+  width: 7px; height: 9px; border: none; margin-left: 0;
+  border-left: 2.5px solid currentColor; border-right: 2.5px solid currentColor;
+}
+.evo-slider {
+  flex: 1 1 4rem; min-width: 2rem; margin: 0;
+  accent-color: var(--link); cursor: pointer;
+}
+.evo-stage.is-active .evo-slider { accent-color: var(--bg); }
+.evo-step {
+  flex: none; font-size: .7rem; color: var(--muted); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.evo-stage.is-active .evo-step { color: var(--bg); opacity: .85; }
+
+.evo-note {
+  font-size: .8rem; color: var(--muted); margin: 0;
+  line-height: 1.6; min-height: 2.6em;
+}
+.evo-controls {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .85rem;
+  font-size: .78rem; color: var(--fg);
+  border-top: 1px solid var(--rule); padding-top: .55rem;
+}
+.evo-controls label { display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
+.evo-controls input[type="checkbox"] { accent-color: var(--link); margin: 0; }
+.evo-speed {
+  font: inherit; font-size: .76rem; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 4px;
+  padding: .1rem .25rem;
+}
+.evo-btn {
+  font: inherit; font-size: .78rem; font-weight: 500;
+  color: var(--fg-strong); background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: .18rem .7rem; cursor: pointer; line-height: 1.5;
+}
+.evo-btn:hover { border-color: var(--link); color: var(--link); }
+
+@media (max-width: 640px) {
+  /* names would wrap the timeline onto four lines; the open stage keeps its
+     label and the rest fall back to their numbers */
+  .evo-stage:not(.is-active) .evo-name { display: none; }
+  .evo-chip { padding: .24rem .4rem; }
+  .evo-stage.is-active .evo-track { width: min(16rem, 58vw); }
+  .evo-controls { gap: .55rem .75rem; font-size: .74rem; }
+}
+
+.stage-list { padding-left: 1.2rem; margin: .9rem 0 1.4rem; }
+.stage-list li { margin: 0 0 .55rem; line-height: 1.72; }

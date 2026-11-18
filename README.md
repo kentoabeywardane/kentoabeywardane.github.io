@@ -35,49 +35,73 @@ live in the token block at the top of `style.css`.
   in `.profile-links`.
 - **News:** newest first; keep it to about five items.
 
-## Interactive trajectory viewer
+## Interactive viewers
 
-`shepherd2-trajectory.html` plays back precomputed ShEPhERD reverse-diffusion
-trajectories in the browser (three.js from a CDN; no build step).
+`shepherd2-trajectory.html` carries two WebGL viewers (three.js from a CDN, no
+build step):
 
-### Adding or changing a trajectory
+| | |
+|---|---|
+| `assets/js/evolution-viewer.js` | the seven-stage fragment-merging story |
+| `assets/js/traj-viewer.js` | one trajectory on its own, further down the page |
 
-1. Pack a ChimeraX frame dump (the `NNN_frame_x{1,3,4}.{xyz,bild}` files that
-   `shepherd_traj.py` loads) into a JS payload:
+Shared pieces: `mol-core.js` (decoding + instanced molecule drawing),
+`ribbon.js` (protein cartoon), `viewpoint.js` (choosing an opening camera).
 
-   ```sh
-   python3 tools/build_traj.py <frame_dir> assets/data/traj-<name>.js \
-       --var TRAJ_<NAME> --stride 3
-   ```
+### The fragment-merging story
 
-   `--stride 3` keeps every third frame (~190 KB for 360 steps). Raise it for a
-   smaller file; the last frame is always kept.
+Everything lives in the 8CNX crystal frame, translated by one shared offset so
+the world origin is the binding site. Nothing is re-centred per structure —
+that is what makes the stage-to-stage overlays meaningful.
 
-2. Add an entry to the `SCENES` array in the `<script type="module">` block at
-   the bottom of `shepherd2-trajectory.html`:
+```sh
+python3 tools/build_evolution.py \
+    <.../shepherd2_composition_fragmerge_8-10_edm_trajectory> --stride 3
+```
 
-   ```js
-   { id: 'name', label: 'Tab label',
-     src: 'assets/data/traj-name.js', global: 'TRAJ_NAME',
-     note: 'One line shown under the tabs.' },
-   ```
+Writes three payloads into `assets/data/`:
 
-   **The array order is the tab order.** Payloads load lazily, so only the
-   selected trajectory is fetched.
+- `evo-base.js` (~23 KB) — the protein CA trace plus the five static
+  structures (fragments 8/10/12, the round-1 merge, the round-2 product).
+  Loaded as a blocking script, since the first frame needs it.
+- `evo-traj-1.js`, `evo-traj-2.js` (~180 KB each) — the two generation
+  trajectories, fetched the first time their stage is opened.
+
+The protein comes from `assets/data/8cnx_apo.pdb`. Only CA positions, the
+carbonyl direction that orients the ribbon, and a secondary-structure flag
+leave Python; the mesh is built in the browser.
+
+**Stages** are the `STAGES` array at the top of `evolution-viewer.js` — a
+`lead` list (solid, may show its interaction profile), a `refs` list (ghosted
+context), whether the profile starts visible, and the caption. `CARBON` just
+above it maps a structure to its carbon colour. Adding or reordering a stage
+means editing that array and nothing else.
+
+`#stage-4` in the URL opens the page straight on that stage, with no
+transition in from stage 1.
+
+### A single trajectory
+
+```sh
+python3 tools/build_traj.py <frame_dir> assets/data/traj-<name>.js \
+    --var TRAJ_<NAME> --stride 3
+```
+
+Unlike `build_evolution.py`, this re-centres on the final frame, which is what
+you want for a trajectory shown on its own. `--stride 3` keeps every third
+frame (~190 KB for 360 steps); the last frame is always kept.
 
 ### Local preview
 
-The viewer is an ES module, which browsers refuse to load over `file://`. Serve
-the directory instead:
+The viewers are ES modules, which browsers refuse to load over `file://`.
+Serve the directory instead:
 
 ```sh
 python3 -m http.server 8787
 # then open http://127.0.0.1:8787/shepherd2-trajectory.html
 ```
 
-`index.html` still opens fine directly from disk. Opening
-`shepherd2-trajectory.html` from disk shows a short note saying to serve it
-instead, rather than sitting on "Loading trajectory…".
-
-This only affects local preview — on GitHub Pages everything is served over
-https and the viewer works normally.
+`index.html` still opens fine directly from disk. Opening the viewer page from
+disk shows a short note saying to serve it instead, rather than hanging on
+"Loading…". This only affects local preview — on GitHub Pages everything is
+served over https.

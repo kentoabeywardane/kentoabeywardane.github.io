@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Watching ShEPhERD-2 generate a molecule</title>
-  <meta name="description" content="An interactive, precomputed reverse-diffusion trajectory from ShEPhERD-2: a molecule and its interaction profile condensing out of noise.">
-  <meta property="og:title" content="Watching ShEPhERD-2 generate a molecule">
-  <meta property="og:description" content="An interactive reverse-diffusion trajectory from ShEPhERD-2: a molecule and its interaction profile condensing out of noise.">
+  <title>Growing a ligand out of fragments with ShEPhERD-2</title>
+  <meta name="description" content="An interactive walkthrough of bioisosteric fragment merging with ShEPhERD-2: crystallographic fragments, their interaction profiles, and two rounds of generation, in the binding site.">
+  <meta property="og:title" content="Growing a ligand out of fragments with ShEPhERD-2">
+  <meta property="og:description" content="An interactive walkthrough of bioisosteric fragment merging with ShEPhERD-2, in the binding site of the D68 3C protease.">
   <meta property="og:image" content="assets/img/shepherd2.webp">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,13 +22,18 @@
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
   } }
   </script>
-  <!-- Without these, the browser only discovers three.js after it has fetched
-       and parsed traj-viewer.js, and the payload only after that again: three
+  <!-- Without these the browser only discovers three.js after it has fetched
+       and parsed the viewer, and the payload only after that again: three
        serial round trips before the first frame.  Preloading makes them one. -->
-  <link rel="modulepreload" href="assets/js/traj-viewer.js">
+  <link rel="modulepreload" href="assets/js/evolution-viewer.js">
+  <link rel="modulepreload" href="assets/js/mol-core.js">
+  <link rel="modulepreload" href="assets/js/ribbon.js">
+  <link rel="modulepreload" href="assets/js/viewpoint.js">
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/TrackballControls.js" crossorigin>
-  <link rel="preload" as="script" href="assets/data/traj-profile-5sry.js">
+  <!-- The protein and every static structure: 23 KB, needed for the first
+       frame, so it is a plain blocking script rather than a fetch. -->
+  <script src="assets/data/evo-base.js"></script>
 </head>
 <body>
 <div class="wrapper">
@@ -52,68 +57,108 @@
 
     <section>
       <p class="post-back"><a href="index.html">&larr; Back</a></p>
-      <h2>Watching ShEPhERD-2 generate a molecule</h2>
+      <h2>Growing a ligand out of fragments</h2>
       <p class="post-meta">ShEPhERD-2 &middot; bioisosteric fragment merging &middot; interactive</p>
 
       <p>
         ShEPhERD-2 doesn't generate a molecule directly. It generates a molecule
         <em>and</em> the interaction profile that molecule presents to a protein &mdash; its
         electrostatic surface and its pharmacophores &mdash; jointly, in one reverse-diffusion
-        process. Below is one of those trajectories, precomputed and played back in the browser.
+        process. That makes a particular kind of design problem tractable: you can hand it an
+        interaction profile assembled from pieces, and ask for one molecule that satisfies all
+        of it.
       </p>
       <p>
-        This particular run is a bioisosteric fragment merge: the model was asked for a single
-        molecule that reproduces the combined interaction profile of two separate crystallographic
-        fragments. Drag to rotate, scroll to zoom, scrub the slider to step through the denoising,
-        and toggle the three channels to see them independently.
+        Below is that idea run end to end against the
+        <a href="https://www.rcsb.org/structure/8CNX">D68 3C protease</a>. Several fragments
+        were soaked into the same binding site; two of them are merged into one generated
+        molecule, and that product is then merged with a third. Walk the seven stages with the
+        timeline under the viewer. Everything sits in the crystal frame throughout, so nothing
+        is realigned between stages &mdash; the overlays line up because they genuinely do.
+      </p>
+      <p>
+        Drag to rotate, scroll to zoom. Stages <b>3</b> and <b>6</b> are the generation
+        trajectories: their chip opens into a slider you can scrub, pause and step through
+        with the arrow keys.
       </p>
 
-      <nav class="tv-tabs" id="tv-tabs" aria-label="Trajectory"></nav>
-      <p class="tv-note" id="tv-note"></p>
-
-      <div class="tv" id="tv">
+      <div class="tv" id="evo">
         <div class="tv-stage">
-          <p class="tv-fallback">Loading trajectory&hellip;</p>
+          <p class="tv-fallback">Loading the binding site&hellip;</p>
         </div>
         <span class="tv-hint">drag to rotate &middot; scroll to zoom</span>
       </div>
 
       <ul class="tv-legend">
-        <li><span class="sw" style="background:#4c5057"></span>Molecule (x<sub>1</sub>)</li>
+        <li><span class="sw" style="background:#2f9e8f"></span>Fragment 8</li>
+        <li><span class="sw" style="background:#d4902f"></span>Fragment 10</li>
+        <li><span class="sw" style="background:#9478cf"></span>Fragment 12</li>
+        <li><span class="sw" style="background:#4c5057"></span>Generated molecule</li>
         <li><span class="sw sw-grad"></span>ESP surface (x<sub>3</sub>): negative &rarr; positive</li>
-        <li><span class="sw" style="background:#cc99ff"></span>Hydrophobe</li>
-        <li><span class="sw" style="background:#333"></span>Aromatic</li>
-        <li><span class="sw" style="background:#d98000"></span>Ring normal</li>
-        <li><span class="sw" style="background:#008c8c"></span>Donor</li>
-        <li><span class="sw" style="background:#9e0859"></span>Acceptor</li>
-        <li><span class="sw" style="background:#00ff00"></span>Halogen</li>
-        <li><span class="sw" style="background:#0000ff"></span>Cation</li>
-        <li><span class="sw" style="background:#ff0000"></span>Anion</li>
-        <li><span class="sw" style="background:#ff8080"></span>Zn binder</li>
       </ul>
       <p class="caption">
-        400 denoising steps, played back at 121 sampled frames. Atom count changes between frames because
-        ShEPhERD-2 diffuses composition along with geometry &mdash; atoms resolve into and out of
-        existence until the molecule settles. Colors match the ChimeraX rendering used in the paper.
+        Carbons are coloured by which structure an atom belongs to; heteroatoms keep their
+        usual CPK colours in every structure, which is what makes the overlays comparable.
+        Hydrogens are hidden by default &mdash; the toggle brings them back. Each generation
+        runs 400 denoising steps, played back at 121 sampled frames.
       </p>
 
-      <h3>What you're looking at</h3>
+      <h3>What each stage shows</h3>
+      <ol class="stage-list">
+        <li><b>Fragments bound.</b> Three fragments from a crystallographic screen, each
+          sitting in the same pocket and each making only a handful of contacts. The ribbon
+          is the apo protein; it fades out with distance from the site so it stays context
+          rather than clutter.</li>
+        <li><b>Pick 8 and 10.</b> These two occupy neighbouring subsites. Their interaction
+          profiles &mdash; the ESP surface and the typed pharmacophores &mdash; are what gets
+          handed to the model, not their atoms.</li>
+        <li><b>Generate the merge.</b> The joint reverse diffusion, conditioned on the combined
+          profile. Bonds are drawn from interatomic distances rather than predicted, which is
+          why they flicker early and only lock in once the geometry is chemically sensible;
+          the atom count moves too, because composition is diffused along with coordinates.</li>
+        <li><b>Merge vs. 8 + 10.</b> The product over the two fragments it came from. Note
+          that it isn't a linker bridging them &mdash; it's a single scaffold that happens to
+          land the same contacts.</li>
+        <li><b>Bring in 12.</b> A third fragment occupying a subsite the round-one molecule
+          doesn't reach.</li>
+        <li><b>Generate round 2.</b> The round-one product goes back in as input, together
+          with fragment 12's profile.</li>
+        <li><b>Final molecule.</b> One molecule over all three starting fragments.</li>
+      </ol>
+
+      <h3>The three channels</h3>
       <p>
-        <b>x<sub>1</sub></b> is the molecule itself: atom positions and identities. Bonds here are
-        drawn from interatomic distances, not predicted by the model, which is why they flicker
-        early in the trajectory and only lock in once the geometry is chemically sensible.
+        <b>x<sub>1</sub></b> is the molecule itself: atom positions and identities.
+        <b>x<sub>3</sub></b> is the electrostatic potential sampled on a shell around it &mdash;
+        blue positive, red negative. <b>x<sub>4</sub></b> is the pharmacophore set: typed
+        interaction points with direction vectors where direction matters (donors, acceptors,
+        aromatic ring normals). x<sub>4</sub> carries most of the conditioning signal; it is
+        what lets you ask for a molecule that makes a specific set of contacts without
+        specifying the molecule.
       </p>
       <p>
-        <b>x<sub>3</sub></b> is the electrostatic potential sampled on a shell around the molecule.
-        Blue is positive, red negative. Early on it's noise; by the end it traces
-        the molecule's actual charge distribution.
+        The <b>Interaction profile</b> toggle shows x<sub>3</sub> and x<sub>4</sub> for
+        whichever structures the current stage is about. It comes on by itself at the stages
+        where the profile is the point, and off at the overlay stages, where the atoms are.
       </p>
+
+      <h3>A single trajectory, on its own</h3>
       <p>
-        <b>x<sub>4</sub></b> is the pharmacophore set: typed interaction points with direction
-        vectors where direction matters (hydrogen-bond donors and acceptors, aromatic ring normals).
-        This is the channel that carries most of the conditioning signal &mdash; it's what lets you
-        ask for a molecule that makes a specific set of contacts without specifying the molecule.
+        For a closer look at one reverse-diffusion run without the rest of the story around
+        it &mdash; a different target, one molecule, all three channels at once:
       </p>
+
+      <div class="tv" id="tv">
+        <div class="tv-stage">
+          <p class="tv-fallback">Scroll here to load the trajectory&hellip;</p>
+        </div>
+        <span class="tv-hint">drag to rotate &middot; scroll to zoom</span>
+      </div>
+      <p class="caption">
+        400 denoising steps, played back at 121 sampled frames. Colours match the ChimeraX
+        rendering used in the paper.
+      </p>
+
       <p class="links">
         <a class="btn" href="https://doi.org/10.64898/2026.09.10.750648">Paper</a>
         <a class="btn" href="https://github.com/coleygroup/shepherd2">Code</a>
@@ -127,93 +172,95 @@
 <script>
   /* Classic script on purpose: a module script is never executed at all when
      the page is opened as a file://, so anything that reports that problem has
-     to live outside the module.  Without this the page sits on "Loading
-     trajectory..." forever with the explanation only in the console. */
+     to live outside the module.  Without this the page sits on "Loading..."
+     forever with the explanation only in the console. */
   (function () {
-    var stage = document.querySelector('#tv .tv-stage');
-    var say = function (html) { stage.innerHTML = '<p class="tv-fallback">' + html + '</p>'; };
-
+    var say = function (box, html) {
+      var s = document.querySelector(box + ' .tv-stage');
+      if (s) s.innerHTML = '<p class="tv-fallback">' + html + '</p>';
+    };
     if (location.protocol === 'file:') {
-      say('This viewer needs the page to be served over http, not opened as a ' +
+      var msg = 'This viewer needs the page to be served over http, not opened as a ' +
           'file — browsers block JavaScript modules on <code>file://</code>.<br>' +
           'Run <code>python3 -m http.server 8000</code> in the site folder and open ' +
-          '<code>http://localhost:8000/shepherd2-trajectory.html</code>.');
+          '<code>http://localhost:8000/shepherd2-trajectory.html</code>.';
+      say('#evo', msg); say('#tv', msg);
       return;
     }
-    /* If the viewer has not drawn anything after 12s, say so rather than
-       leaving the loading message up indefinitely. */
     window.setTimeout(function () {
-      if (!document.querySelector('#tv .tv-canvas')) {
-        say('The trajectory is still loading, or it failed to start. ' +
+      if (!document.querySelector('#evo .tv-canvas')) {
+        say('#evo', 'The scene is still loading, or it failed to start. ' +
             'It needs WebGL and a connection to the three.js CDN — ' +
             'the browser console will say which.');
       }
-    }, 12000);
+    }, 15000);
   }());
 </script>
 <script type="module">
-  import { mount } from './assets/js/traj-viewer.js';
+  import { mount as mountEvolution } from './assets/js/evolution-viewer.js';
 
-  /* Trajectories, in the order they appear in the picker.  Reorder this array
-     to reorder the tabs; add an entry (built with tools/build_traj.py) to add
-     another run.  Payloads load lazily -- only the selected one is fetched. */
-  const SCENES = [
-    { id: 'profile',    label: 'Interaction profile',
-      src: 'assets/data/traj-profile-5sry.js',  global: 'TRAJ_PROFILE_5SRY',
-      note: 'A single molecule and its interaction profile denoising together \u2014 the base behaviour everything else builds on.' },
-    { id: 'fragmerge1', label: 'Fragment merge \u00b7 round 1',
-      src: 'assets/data/traj-fragmerge-1.js',   global: 'TRAJ_FRAGMERGE_1',
-      note: 'Conditioned on the combined profile of two crystallographic fragments.' },
-    { id: 'fragmerge2', label: 'Fragment merge \u00b7 round 2',
-      src: 'assets/data/traj-fragmerge-2.js',   global: 'TRAJ_FRAGMERGE_2',
-      note: 'A second round of merging, taking a round-one product back into the model.' },
-  ];
+  /* Payloads arrive as classic scripts that assign a global, which keeps them
+     cacheable as plain files and avoids a JSON parse of a megabyte of base64
+     on the main thread before anything can be drawn. */
+  const loadGlobal = (src, name) => window[name]
+    ? Promise.resolve(window[name])
+    : new Promise((res, rej) => {
+        const el = document.createElement('script');
+        el.src = src;
+        el.onload = () => window[name] ? res(window[name])
+                                       : rej(new Error('missing ' + name));
+        el.onerror = () => rej(new Error('could not load ' + src));
+        document.head.appendChild(el);
+      });
 
-  const box = document.getElementById('tv');
-  const tabs = document.getElementById('tv-tabs');
-  const note = document.getElementById('tv-note');
-  const stage = () => box.querySelector('.tv-stage');
-  const loaded = new Map();
-  let viewer = null, current = null;
+  const TRAJ = {
+    t1: ['assets/data/evo-traj-1.js', 'EVO_TRAJ_1'],
+    t2: ['assets/data/evo-traj-2.js', 'EVO_TRAJ_2'],
+  };
 
-  const loadScene = (sc) => loaded.get(sc.id) || new Promise((res, rej) => {
-    const el = document.createElement('script');
-    el.src = sc.src;
-    el.onload = () => window[sc.global] ? res(window[sc.global])
-                                        : rej(new Error('missing ' + sc.global));
-    el.onerror = () => rej(new Error('could not load ' + sc.src));
-    document.head.appendChild(el);
-  }).then(d => { loaded.set(sc.id, Promise.resolve(d)); return d; });
-
-  SCENES.forEach((sc, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'tv-tab';
-    b.textContent = sc.label;
-    b.addEventListener('click', () => select(i));
-    tabs.appendChild(b);
-  });
-
-  async function select(i) {
-    const sc = SCENES[i];
-    if (current === i) return;
-    current = i;
-    [...tabs.children].forEach((b, j) => b.setAttribute('aria-current', j === i ? 'true' : 'false'));
-    note.textContent = sc.note;
-    stage().innerHTML = '<p class="tv-fallback">Loading trajectory&hellip;</p>';
-    try {
-      const data = await loadScene(sc);
-      if (current !== i) return;
-      if (viewer) { viewer.dispose(); viewer = null; }
-      viewer = mount(box, data);
-    } catch (err) {
-      console.error(err);
-      stage().innerHTML = '<p class="tv-fallback">Could not start the viewer. ' +
-        'It needs WebGL and a browser that supports ES modules.</p>';
-    }
+  const evoBox = document.getElementById('evo');
+  try {
+    const evo = mountEvolution(evoBox, window.EVO_BASE, {
+      loadTraj: (id) => loadGlobal(TRAJ[id][0], TRAJ[id][1]),
+    });
+    /* #stage-4 opens straight on that stage, so a particular point in the
+       story can be linked to directly. */
+    let firstHash = true;
+    const fromHash = () => {
+      const m = /^#stage-(\d)$/.exec(location.hash);
+      /* landing straight on a stage shows it at once; a hash change made while
+         the page is open still dissolves across like any other stage change */
+      if (m) evo.goTo(Math.max(0, Math.min(6, +m[1] - 1)), { snap: firstHash });
+      firstHash = false;
+    };
+    fromHash();
+    addEventListener('hashchange', fromHash);
+  } catch (err) {
+    console.error(err);
+    evoBox.querySelector('.tv-stage').innerHTML =
+      '<p class="tv-fallback">Could not start the viewer. It needs WebGL and a ' +
+      'browser that supports ES modules.</p>';
   }
 
-  select(0);
+  /* The standalone trajectory is a second WebGL context and another 150 KB, so
+     it waits until someone scrolls far enough to care about it. */
+  const tvBox = document.getElementById('tv');
+  const io = new IntersectionObserver(async (entries, obs) => {
+    if (!entries[0].isIntersecting) return;
+    obs.disconnect();
+    try {
+      const [{ mount }, data] = await Promise.all([
+        import('./assets/js/traj-viewer.js'),
+        loadGlobal('assets/data/traj-profile-5sry.js', 'TRAJ_PROFILE_5SRY'),
+      ]);
+      mount(tvBox, data);
+    } catch (err) {
+      console.error(err);
+      tvBox.querySelector('.tv-stage').innerHTML =
+        '<p class="tv-fallback">Could not start the viewer.</p>';
+    }
+  }, { rootMargin: '400px' });
+  io.observe(tvBox);
 </script>
 </body>
 </html>
