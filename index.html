@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kento Abeywardane</title>
+  <meta name="description" content="Kento Abeywardane - PhD candidate at MIT building interaction-aware generative models for 3D molecular design (ShEPhERD, ShEPhERD-2, ShEPhERD-score).">
+  <meta property="og:title" content="Kento Abeywardane">
+  <meta property="og:description" content="Interaction-aware generative models for molecular design. PhD candidate, MIT Chemical Engineering and Computation.">
+  <meta property="og:image" content="assets/img/shepherd2.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="mark" href="#top">Kento Abeywardane</a>
+    <nav>
+      <a href="#research">Research</a>
+      <a href="#publications">Publications</a>
+      <a href="#projects">Projects</a>
+      <a href="#experience">Experience</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+
+  <section class="intro">
+    <h1>Kento Abeywardane</h1>
+    <p class="role">PhD Candidate, Chemical Engineering &amp; Computation, MIT &middot; <a href="https://coley.mit.edu/">Coley Research Group</a></p>
+    <p>
+      I build generative models for 3D molecular design that reason about how molecules
+      <em>interact</em> &mdash; through shape, electrostatics, and pharmacophores &mdash; rather than only how
+      they look as graphs. My work spans SE(3)-equivariant diffusion models, differentiable 3D similarity
+      and alignment, and generative screening campaigns carried through to experimental validation.
+    </p>
+    <p>
+      Previously I earned an Sc.M. in Data-Enabled Computational Engineering &amp; Sciences and an Sc.B. in
+      Chemical Engineering at Brown University, where I worked on first-principles thermochemistry for PFAS
+      in the Goldsmith Lab for Chemical Kinetics.
+    </p>
+    <ul class="links">
+      <li><a href="mailto:kento@mit.edu">Email</a></li>
+      <li><a href="https://scholar.google.com/citations?user=9B-RPbwAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><a href="https://github.com/kentoabeywardane">GitHub</a></li>
+      <li><a href="https://www.linkedin.com/in/kentoabeywardane/">LinkedIn</a></li>
+      <li><a href="https://x.com/kabeywar">X</a></li>
+      <!-- Add a CV PDF at assets/Kento_Abeywardane_CV.pdf and uncomment:
+      <li><a href="assets/Kento_Abeywardane_CV.pdf">CV</a></li> -->
+    </ul>
+  </section>
+
+  <section id="research">
+    <h2>Featured research</h2>
+    <p class="section-lede">
+      ShEPhERD is a family of tools built around one idea: a molecule's <em>interaction profile</em> &mdash;
+      its shape, electrostatic surface, and directional pharmacophores &mdash; is a practical, universal
+      language for designing new molecules.
+    </p>
+
+    <article class="feature feature-lead">
+      <figure><img src="assets/img/shepherd2.webp" alt="ShEPhERD-2 overview: a hit molecule's interaction profile is used to generate new samples, enabling hit expansion, scaffold elaboration, modality hopping, dual-target design, selectivity design, and optimization." loading="lazy" width="1600" height="830"></figure>
+      <div class="feature-body">
+        <div class="feature-head">
+          <h3>ShEPhERD-2</h3>
+          <span class="tag">bioRxiv 2026</span>
+        </div>
+        <p class="feature-sub">Interaction profiles as a universal language for generative molecular design</p>
+        <p>
+          A 3D generative model that samples diverse molecules conditioned on a target interaction profile,
+          with precise control through pharmacophore prioritization, substructure constraints, and the
+          composition of multiple profiles. These enable bioisosteric fragment merging, dual-target design,
+          selectivity engineering, and peptide-to-small-molecule modality hopping.
+        </p>
+        <ul class="actions">
+          <li><a href="https://doi.org/10.64898/2026.09.10.750648">Paper</a></li>
+          <li><a href="https://github.com/coleygroup/shepherd2">Code</a></li>
+          <li><a href="https://huggingface.co/kabeywar/shepherd2">Weights</a></li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="feature-pair">
+      <article class="feature">
+        <figure><img src="assets/img/shepherd.webp" alt="ShEPhERD jointly diffuses a 3D molecular structure together with its shape, electrostatic, and pharmacophore point clouds." loading="lazy" width="1400" height="280"></figure>
+        <div class="feature-body">
+          <div class="feature-head">
+            <h3>ShEPhERD</h3>
+            <span class="tag tag-accent">ICLR 2025 &middot; Oral</span>
+          </div>
+          <p class="feature-sub">Diffusing shape, electrostatics, and pharmacophores for bioisosteric drug design</p>
+          <p>
+            An SE(3)-equivariant diffusion model that learns the joint distribution over 3D molecular
+            structures and their interaction profiles, generating molecules in 3D that reproduce a
+            reference's interactions. Selected for an oral presentation (top 1.8% of submissions).
+          </p>
+          <ul class="actions">
+            <li><a href="https://openreview.net/forum?id=KSLkFYHlYg">Paper</a></li>
+            <li><a href="https://arxiv.org/abs/2411.04130">arXiv</a></li>
+            <li><a href="https://github.com/coleygroup/shepherd">Code</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="feature">
+        <figure><img src="assets/img/shepherd-score.webp" alt="ShEPhERD-score decomposes a molecule into shape, electrostatics, and pharmacophores and scores 3D similarity through Gaussian point-cloud overlap." loading="lazy" width="1400" height="640"></figure>
+        <div class="feature-body">
+          <div class="feature-head">
+            <h3>ShEPhERD-score</h3>
+            <span class="tag">Open source</span>
+          </div>
+          <p class="feature-sub">Fast, adaptable 3D alignment and scoring of molecular features</p>
+          <p>
+            A modular toolkit for conformer generation, interaction-profile extraction, differentiable 3D
+            similarity scoring, and alignment in PyTorch and JAX &mdash; plus the evaluation suite used to
+            benchmark 3D generative models.
+          </p>
+          <ul class="actions">
+            <li><a href="https://shepherd-score.readthedocs.io/">Docs</a></li>
+            <li><a href="https://pypi.org/project/shepherd-score/">PyPI</a></li>
+            <li><a href="https://github.com/coleygroup/shepherd-score">Code</a></li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="publications">
+    <h2>Publications</h2>
+    <p class="note">* equal contribution</p>
+    <ol class="pubs">
+      <li>
+        <p class="pub-title">Interaction Profiles as a Universal Language for Generative Molecular Design with ShEPhERD-2</p>
+        <p class="pub-authors"><b>K. Abeywardane</b>*, K. Walker*, C.W. Coley</p>
+        <p class="pub-venue"><i>bioRxiv</i> (preprint), 2026 &middot; <a href="https://doi.org/10.64898/2026.09.10.750648">paper</a> &middot; <a href="https://github.com/coleygroup/shepherd2">code</a></p>
+      </li>
+      <li>
+        <p class="pub-title">ShEPhERD: Diffusing Shape, Electrostatics, and Pharmacophores for Bioisosteric Drug Design</p>
+        <p class="pub-authors">K. Adams*, <b>K. Abeywardane</b>*, J. Fromer, C.W. Coley</p>
+        <p class="pub-venue"><i>ICLR</i>, 2025 &middot; <span class="hl">Oral</span> &middot; <a href="https://openreview.net/forum?id=KSLkFYHlYg">paper</a> &middot; <a href="https://github.com/coleygroup/shepherd">code</a></p>
+      </li>
+      <li>
+        <p class="pub-title">Accurate Enthalpies of Formation for PFAS from First Principles: Combining Different Levels of Theory in a Generalized Thermochemical Hierarchy</p>
+        <p class="pub-authors"><b>K. Abeywardane</b>, C.F. Goldsmith</p>
+        <p class="pub-venue"><i>ACS Physical Chemistry Au</i>, 2024 &middot; <a href="https://doi.org/10.1021/acsphyschemau.3c00056">paper</a> &middot; <a href="https://github.com/kentoabeywardane/autoCBH">code</a></p>
+      </li>
+      <li>
+        <p class="pub-title">Linking Experimental and Ab Initio Thermochemistry of Adsorbates with a Generalized Thermochemical Hierarchy</p>
+        <p class="pub-authors">B. Kreitz, <b>K. Abeywardane</b>, C.F. Goldsmith</p>
+        <p class="pub-venue"><i>Journal of Chemical Theory and Computation</i>, 2023 &middot; <a href="https://doi.org/10.1021/acs.jctc.3c00112">paper</a></p>
+      </li>
+      <li>
+        <p class="pub-title">A Theory-Based Mechanism for Fluoromethane Combustion I: Thermochemistry and Abstraction Reactions</p>
+        <p class="pub-authors">S. Sharma, <b>K. Abeywardane</b>, C.F. Goldsmith</p>
+        <p class="pub-venue"><i>The Journal of Physical Chemistry A</i>, 2023 &middot; <a href="https://doi.org/10.1021/acs.jpca.2c06623">paper</a></p>
+      </li>
+    </ol>
+
+    <h3 class="sub">In preparation</h3>
+    <ol class="pubs pubs-quiet">
+      <li>
+        <p class="pub-title">Large library docking and generative AI finds thousands of novel chemotypes for the &mu;-opioid receptor</p>
+        <p class="pub-authors">S. Vigneron*, <b>K. Abeywardane</b>*, &hellip;, C.W. Coley, B. Shoichet</p>
+      </li>
+      <li>
+        <p class="pub-title">ShEPhERD-score: Fast, Adaptable Three-Dimensional Alignment of Molecular Features</p>
+        <p class="pub-authors">N. Somers*, <b>K. Abeywardane</b>*, C.W. Coley, M. Elkin</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="projects">
+    <h2>Other projects</h2>
+    <ul class="projects">
+      <li>
+        <figure class="thumb"><img src="assets/img/autocbh.webp" alt="Example connectivity-based hierarchy scheme fragmenting a molecule into smaller, error-cancelling subgraphs." loading="lazy" width="900" height="550"></figure>
+        <div>
+          <a class="proj-title" href="https://github.com/kentoabeywardane/autoCBH">autoCBH</a>
+          <p>Automates the fragmentation of molecular graphs into structure-conserving hierarchies, coupling
+          multi-fidelity quantum chemistry with experimental data through error cancellation to predict
+          heats of formation for large molecules. Basis of my master's thesis and the PFAS thermochemistry work.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="proj-title">Generative screening for the &mu;-opioid receptor</span>
+          <p>Docking, scoring, and downselection workflows around a synthesis-constrained generative model
+          (SynFormer), reaching experimental hit rates and affinities comparable to a concurrent 3.8B-compound
+          docking campaign from only 1M generated samples. With collaborators at UCSF.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="proj-title">Cardiac safety modeling &middot; Bristol Myers Squibb</span>
+          <p>An ODE-based electrophysiological model of a human ventricular cardiomyocyte in MATLAB/Simulink,
+          calibrated across a virtual population of cells to predict drug effects for cardiac toxicity screening.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="proj-title">Protein diffusiophoresis</span>
+          <p>Non-equilibrium molecular dynamics (OpenMM) studying how salt gradients drive protein transport,
+          and what that implies for stability and function. Ault Fluids Lab, Brown University.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <a class="proj-title" href="https://github.com/kentoabeywardane/H2O2-combustion-reactors">Catalytic combustion reactors</a>
+          <p>1D plug-flow and 2D rectangular reactor models for the catalytic combustion of hydrogen&ndash;oxygen
+          systems, built with Cantera and COMSOL.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <a class="proj-title" href="https://github.com/kentoabeywardane/COVID19-In-Host-Viral-Load-Modeling">In-host viral load modeling</a>
+          <p>A compartmental model of SARS-CoV-2 viral dynamics and the innate immune response, fit to
+          clinical time-course data.</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section id="experience">
+    <h2>Experience &amp; education</h2>
+    <ol class="timeline">
+      <li>
+        <span class="when">2023 &ndash; 2028 (exp.)</span>
+        <div>
+          <p class="what">PhD, Chemical Engineering &amp; Computation &middot; MIT</p>
+          <p class="where">Coley Research Group &middot; Center for Computational Science and Engineering</p>
+          <p>Thesis: interaction-aware generative models for molecular design.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2022 &ndash; 2023</span>
+        <div>
+          <p class="what">Sc.M., Data-Enabled Computational Engineering &amp; Sciences &middot; Brown University</p>
+          <p class="where">Goldsmith Lab for Chemical Kinetics</p>
+          <p>Thesis: autoCBH &mdash; computing heats of formation in a structure-conserving generalized hierarchy.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2022</span>
+        <div>
+          <p class="what">Quantitative Systems Pharmacology R&amp;D Intern &middot; Bristol Myers Squibb</p>
+          <p class="where">Clinical Pharmacology &amp; Pharmacometrics, Princeton, NJ</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2018 &ndash; 2022</span>
+        <div>
+          <p class="what">Sc.B., Chemical Engineering &middot; Brown University</p>
+          <p class="where">Goldsmith Lab for Chemical Kinetics &middot; Ault Fluids Lab</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="cols">
+      <div>
+        <h3 class="sub">Selected honors</h3>
+        <ul class="plain">
+          <li><b>Schwarzman College of Computing Future Research Cohort Fellow</b>, MIT &middot; 2025&ndash;26<br><span class="muted">Full-year fellowship funded by Google</span></li>
+          <li><b>Joseph Kestin Award of Excellence</b>, Brown Engineering &middot; 2022</li>
+          <li><b>Outstanding Chemical Engineering Senior Award</b>, Brown Engineering &middot; 2022</li>
+          <li><b>Donald F. Othmer Sophomore Academic Excellence Award</b>, AIChE &middot; 2020</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="sub">Selected talks</h3>
+        <ul class="plain">
+          <li>EPFL AI in Chemistry Seminar &middot; Nov. 2026 <span class="muted">(oral)</span></li>
+          <li>Broad Institute ChemBio Retreat &middot; Sept. 2026 <span class="muted">(oral)</span></li>
+          <li>OpenEye CUP XXV, Santa Fe &middot; Mar. 2026 <span class="muted">(oral)</span></li>
+          <li>MLPDS Consortium, Cambridge &middot; Oct. 2025 <span class="muted">(oral)</span></li>
+          <li>ICLR, Singapore &middot; Apr. 2025 <span class="muted">(oral + poster)</span></li>
+          <li>ACS National Meeting, San Diego &middot; Mar. 2025 <span class="muted">(oral)</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="sub">Teaching &amp; mentoring</h3>
+        <ul class="plain">
+          <li>Research mentor to five undergraduate and rotation students, Coley Group &middot; 2025&ndash;present</li>
+          <li>TA, Machine Learning for Molecular Engineering (X.C01/C51), MIT &middot; 2026</li>
+          <li>Co-led an AI/ML for drug discovery workshop at H3D, University of Cape Town &middot; 2025</li>
+          <li>Mentor, MIT ChemE Application Mentorship Program and Brown Alumni Connections</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="sub">Tools</h3>
+        <ul class="plain">
+          <li><b>Languages</b> Python, MATLAB/Simulink, Git, SLURM, Linux</li>
+          <li><b>ML</b> PyTorch, JAX, PyTorch Geometric</li>
+          <li><b>Chemistry</b> RDKit, xTB, AutoDock Vina, UCSF DOCK, Gaussian, ORCA, ASE, OpenMM, Cantera</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <p>Cambridge, MA &middot; <a href="mailto:kento@mit.edu">kento@mit.edu</a></p>
+    <p class="muted">Last updated November 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
