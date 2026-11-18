@@ -96,9 +96,11 @@
         Aligning molecules in 3D to measure their similarity is a core operation in cheminformatics.
         <a href="https://shepherd-score.readthedocs.io/">ShEPhERD-score</a> provides differentiable 3D similarity functions for
         scoring and alignment across shape, electrostatic potential (ESP), pharmacophores, and their combinations.
-        Below, we demonstrate the rigid alignment of two molecules using three representations: volumetric shape,
+        Below, we demonstrate the rigid alignment of two molecules using four representations: volumetric shape,
         volumetric shape with avoid points, solvent-accessible surface, and pharmacophores.
       </p>
+
+      <p>For more information, please visit the <a href="https://shepherd-score.readthedocs.io/">documentation</a>!</p>
 
       <div class="tv-tabs" role="group" aria-label="Representation used for alignment">
         <button class="tv-tab" type="button" data-mode="vol_noH" aria-current="true">Volume</button>
@@ -118,7 +120,8 @@
       </p>
 
       <p>
-        ShEPhERD-score contains many more scoring functions and alignment modes!
+        Because initial oritentation has a large effect on the resulting alignment (due to many local optima), in practice,
+        we typically initialize 5-50 random oritentations and select the best one. ShEPhERD-score contains many more scoring functions and alignment modes!
       </p>
       <p class="av-mols" id="mols"></p>
 
