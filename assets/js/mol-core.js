@@ -69,20 +69,29 @@ export function createActor(data, opts = {}) {
   const x1p = unb64(data.x1.pos, Int16Array);
   const fixedBonds = data.x1.bonds ? unb64(data.x1.bonds, Uint16Array) : null;
 
-  const n3 = data.x3.n;
-  const x3p = unb64(data.x3.pos, Int16Array);
-  const x3e = unb64(data.x3.esp, Int8Array);
+  /* A payload may carry atoms alone: the generation trajectories do, because
+     a half-denoised surface is noise rather than information.  Everything
+     below then runs over empty channels and the profile layers simply draw
+     nothing, which keeps one code path for both kinds of actor. */
+  const hasProfile = !!(data.x3 && data.x4s && data.x4a);
+  const NOCOUNT = new Uint16Array(nF);
 
-  const s4c = unb64(data.x4s.counts, Uint16Array), s4o = offsets(s4c);
-  const s4col = unb64(data.x4s.col, Uint8Array);
-  const s4rad = unb64(data.x4s.rad, Uint8Array);
-  const s4p = unb64(data.x4s.pos, Int16Array);
+  const n3 = hasProfile ? data.x3.n : 0;
+  const x3p = hasProfile ? unb64(data.x3.pos, Int16Array) : new Int16Array(0);
+  const x3e = hasProfile ? unb64(data.x3.esp, Int8Array) : new Int8Array(0);
 
-  const a4c = unb64(data.x4a.counts, Uint16Array), a4o = offsets(a4c);
-  const a4col = unb64(data.x4a.col, Uint8Array);
-  const a4len = unb64(data.x4a.len, Uint8Array);
-  const a4p = unb64(data.x4a.pos, Int16Array);
-  const a4d = unb64(data.x4a.dir, Int8Array);
+  const s4c = hasProfile ? unb64(data.x4s.counts, Uint16Array) : NOCOUNT;
+  const s4o = offsets(s4c);
+  const s4col = hasProfile ? unb64(data.x4s.col, Uint8Array) : new Uint8Array(0);
+  const s4rad = hasProfile ? unb64(data.x4s.rad, Uint8Array) : new Uint8Array(0);
+  const s4p = hasProfile ? unb64(data.x4s.pos, Int16Array) : new Int16Array(0);
+
+  const a4c = hasProfile ? unb64(data.x4a.counts, Uint16Array) : NOCOUNT;
+  const a4o = offsets(a4c);
+  const a4col = hasProfile ? unb64(data.x4a.col, Uint8Array) : new Uint8Array(0);
+  const a4len = hasProfile ? unb64(data.x4a.len, Uint8Array) : new Uint8Array(0);
+  const a4p = hasProfile ? unb64(data.x4a.pos, Int16Array) : new Int16Array(0);
+  const a4d = hasProfile ? unb64(data.x4a.dir, Int8Array) : new Int8Array(0);
 
   const elementNames = opts.elements || data.elements;
   const palette = (opts.colors || data.colors).map(
@@ -301,7 +310,7 @@ export function createActor(data, opts = {}) {
 
   draw(0);
   return {
-    group, layers, nframes: nF, data,
+    group, layers, nframes: nF, data, hasProfile,
     setFrame: (f) => draw(Math.max(0, Math.min(nF - 1, f | 0))),
     setShowH: (v) => { if (v !== showH) { showH = v; draw(Math.max(0, frame)); } },
     setLayerOpacity, radius, dispose,

@@ -46,8 +46,8 @@ const STAGES = [
     profiles: true,
     note: 'Fragments 1 and 2 occupy neighbouring subsites. Fragment 3 is set aside. The interaction profiles of the two — ESP surface and pharmacophores — are extracted and combined into one target.' },
   { label: 'Merge round 1', traj: 't1', lead: ['t1'], refs: ['frag8', 'frag10'],
-    profiles: true,
-    note: 'ShEPhERD-2 denoises a molecule and its interaction profile together, conditioned on the combined profile of fragments 1 and 2.' },
+    profiles: false,
+    note: 'ShEPhERD-2 denoises the molecule and its interaction profile together, conditioned on the combined profile of fragments 1 and 2. Only the atoms are drawn here — the profile is still noise for most of the run.' },
   { label: 'Generated merge', lead: ['merged1'], refs: ['frag8', 'frag10'],
     profiles: false,
     note: 'The generated molecule against the two fragments it was asked to reproduce. It is not a linker between them — it is one scaffold that lands the same contacts.' },
@@ -55,7 +55,7 @@ const STAGES = [
     profiles: false,
     note: 'Fragment 3 binds an adjacent subsite the round-one molecule does not reach. Its profile is added to the target.' },
   { label: 'Merge round 2', traj: 't2', lead: ['t2'], refs: ['merged1', 'frag12'],
-    profiles: true,
+    profiles: false,
     note: 'A second generation, conditioned on the round-one molecule plus fragment 3 — the merged product goes back into the model as input.' },
   { label: 'Final molecule', lead: ['merged2'], refs: ['frag8', 'frag10', 'frag12'],
     profiles: false,
@@ -231,12 +231,19 @@ export function mount(box, base, opts = {}) {
   }
   let wantRibbon = 0.3, haveRibbon = 0.3;
 
+  /* Only the fragments and the finished molecules carry an interaction
+     profile.  The generation trajectories are atoms alone. */
+  const hasProfile = (k) => !!(actors[k] && actors[k].hasProfile);
+  const stageHasProfile = (st) => !!st && st.lead.some(hasProfile);
+
   function refreshTargets() {
     const st = STAGES[current];
     for (const k of Object.keys(want)) want[k].mol = want[k].prof = 0;
     for (const k of st.lead) {
       want[k].mol = 1;
-      want[k].prof = showProfiles ? 1 : 0;
+      /* a trajectory carries no profile of its own, so there is nothing to
+         raise here however the toggle is set */
+      want[k].prof = showProfiles && hasProfile(k) ? 1 : 0;
     }
     for (const k of st.refs) want[k].mol = REF_OPACITY;
     /* The wide shot is the one place the whole fold should read; up close the
@@ -420,7 +427,13 @@ export function mount(box, base, opts = {}) {
       el.querySelector('.evo-play')
         .setAttribute('aria-label', p.playing ? 'Pause' : 'Play');
     });
-    optEl('profiles').checked = showProfiles;
+    /* nothing to toggle on a stage whose molecule has no profile: the control
+       greys out rather than sitting there doing nothing when clicked */
+    const canProf = stageHasProfile(st);
+    const pe = optEl('profiles');
+    pe.checked = showProfiles && canProf;
+    pe.disabled = !canProf;
+    pe.closest('label').classList.toggle('is-off', !canProf);
   }
 
   /* ---------- resize + loop ---------- */

@@ -387,6 +387,8 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 }
 .evo-controls label { display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
 .evo-controls input[type="checkbox"] { accent-color: var(--link); margin: 0; }
+/* a control with nothing to act on, on this stage: still there, visibly inert */
+.evo-controls label.is-off { color: var(--muted); cursor: default; opacity: .55; }
 .evo-speed {
   font: inherit; font-size: .76rem; color: var(--fg);
   background: var(--bg); border: 1px solid var(--rule); border-radius: 4px;

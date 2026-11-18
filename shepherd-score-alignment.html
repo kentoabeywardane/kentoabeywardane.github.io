@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aligning two molecules with shepherd-score</title>
+  <meta name="description" content="An interactive replay of 3D molecular alignment with shepherd-score: watch the optimizer overlay one molecule on another by volume, surface shape, or pharmacophores.">
+  <meta property="og:title" content="Aligning two molecules with shepherd-score">
+  <meta property="og:description" content="Watch shepherd-score align one molecule onto another by volume, surface shape, or pharmacophores, one optimizer step at a time.">
+  <meta property="og:image" content="assets/img/shepherd-score.webp">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  } }
+  </script>
+  <link rel="modulepreload" href="assets/js/align-viewer.js">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/TrackballControls.js" crossorigin>
+  <!-- 44 KB: both molecules plus every step of all three runs. -->
+  <script src="assets/data/align-82-99.js"></script>
+
+  <style>
+    /* score chart under the transport row; everything else reuses .tv-* */
+    .av-score { display: flex; flex-direction: column; gap: .3rem; }
+    .av-score-head { display: flex; align-items: baseline; gap: .55rem; font-size: .78rem; color: var(--muted); }
+    .av-score-label { color: var(--fg); }
+    .av-score-val {
+      font-size: .95rem; font-weight: 600; color: var(--fg-strong);
+      font-variant-numeric: tabular-nums; min-width: 3.2em;
+    }
+    .av-score-best { margin-left: auto; font-variant-numeric: tabular-nums; }
+    .av-spark { position: relative; height: 56px; cursor: crosshair; touch-action: none; }
+    .av-spark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .av-spark line, .av-spark polyline { vector-effect: non-scaling-stroke; }
+    .av-grid { stroke: var(--rule); stroke-width: 1; }
+    .av-best { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+    .av-line { stroke: var(--link); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .av-cursor { stroke: var(--muted); stroke-width: 1; opacity: .55; }
+    .av-dot {
+      position: absolute; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--link); box-shadow: 0 0 0 2px var(--bg);
+      transform: translate(-50%, -50%); pointer-events: none;
+    }
+    .av-tip {
+      position: absolute; top: -1.6rem; white-space: nowrap; pointer-events: none;
+      font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--fg-strong);
+      background: var(--bg); border: 1px solid var(--rule); border-radius: 4px;
+      padding: .05rem .4rem;
+    }
+    .av-mols { font-size: .8rem; color: var(--fg); margin: .2rem 0 0; line-height: 1.7; }
+    .av-mols code { font-size: .78rem; word-break: break-all; }
+    .tv-legend .sw-sq { border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header class="profile">
+    <div class="avatar monogram" aria-hidden="true">KA</div>
+    <h1 class="profile-name"><a href="index.html">Kento Abeywardane</a></h1>
+    <p class="profile-role">PhD Candidate</p>
+    <p class="profile-affil">
+      <a href="https://cheme.mit.edu/">MIT Chemical Engineering</a><br>
+      <a href="https://coley.mit.edu/">Coley Research Group</a>
+    </p>
+    <nav class="profile-links">
+      <a href="index.html">Home</a>
+      <a href="https://github.com/coleygroup/shepherd-score">Code</a>
+      <a href="https://shepherd-score.readthedocs.io/">Docs</a>
+    </nav>
+  </header>
+
+  <main class="content">
+
+    <section>
+      <p class="post-back"><a href="index.html">&larr; Back</a></p>
+      <h2>Aligning two molecules with shepherd-score</h2>
+      <p class="post-meta">An interactive replay of 3D similarity alignment</p>
+
+      <p>
+        Two molecules can look nothing alike as graphs and still fill the same space, present
+        the same surface, or point their hydrogen-bond donors and acceptors the same way.
+        shepherd-score measures that 3D similarity as a Tanimoto overlap of Gaussians placed on
+        a molecule's features, and finds the best overlay by optimizing a rigid rotation and
+        translation of one molecule against the other with gradient ascent.
+      </p>
+      <p>
+        Below, a fit molecule (<span style="color:#8a6fd8;font-weight:600">violet</span> carbons)
+        starts from the same pose, rotated 100&deg; and shifted 3.5&nbsp;&Aring; away from a good
+        overlay, and is aligned onto a fixed reference (grey carbons). Pick what to align on.
+      </p>
+
+      <div class="tv-tabs" role="group" aria-label="Representation used for alignment">
+        <button class="tv-tab" type="button" data-mode="vol_noH" aria-current="true">Volume</button>
+        <button class="tv-tab" type="button" data-mode="surf">Surface</button>
+        <button class="tv-tab" type="button" data-mode="pharm">Pharmacophores</button>
+      </div>
+      <p class="tv-note" id="mode-note"></p>
+
+      <div class="tv" id="align">
+        <div class="tv-stage"><p class="tv-fallback">Loading the viewer&hellip;</p></div>
+        <span class="tv-hint">drag to rotate &middot; scroll to zoom</span>
+      </div>
+      <ul class="tv-legend" id="legend"></ul>
+      <p class="caption">
+        Each frame is one Adam step (learning rate 0.1) on the SE(3) pose, from a single start
+        (<code>num_repeats=1</code>), until the score stops changing. The dashed line is the
+        best score the library finds with its default 50 random starts; every run here reaches it.
+        Space plays and pauses, the arrow keys step, and the score chart can be dragged to scrub.
+      </p>
+
+      <h3>What each representation sees</h3>
+      <ul>
+        <li><strong>Volume.</strong> A Gaussian on every heavy atom; the score is their
+          normalized overlap. Only the atoms are drawn, without hydrogens, since that is all it
+          scores. It rewards filling the same space, and nothing else.</li>
+        <li><strong>Surface.</strong> 200 points sampled on each molecule's solvent-accessible
+          surface. The score is the overlap of those point clouds, so it matches outer shape and
+          ignores what's inside.</li>
+        <li><strong>Pharmacophores.</strong> Acceptors, donors, aromatic rings, halogens and
+          hydrophobes, each a Gaussian at an anchor, the directional ones with a vector that has
+          to line up too. Only same-type features count. It keeps aligning longest of the three,
+          and lands on a different pose from the shape-based scores.</li>
+      </ul>
+      <p class="av-mols" id="mols"></p>
+
+      <p class="links">
+        <a class="btn btn-lead" href="https://shepherd-score.readthedocs.io/">Docs</a>
+        <a class="btn" href="https://github.com/coleygroup/shepherd-score">Code</a>
+        <a class="btn" href="https://pypi.org/project/shepherd-score/">PyPI</a>
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* Classic script on purpose: module scripts never run from file://, so the
+     explanation has to live outside the module (see shepherd2-trajectory.html). */
+  (function () {
+    var say = function (html) {
+      var s = document.querySelector('#align .tv-stage');
+      if (s) s.innerHTML = '<p class="tv-fallback">' + html + '</p>';
+    };
+    if (location.protocol === 'file:') {
+      say('This viewer needs the page to be served over http, not opened as a ' +
+          'file — browsers block JavaScript modules on <code>file://</code>.<br>' +
+          'Run <code>python3 -m http.server 8000</code> in the site folder and open ' +
+          '<code>http://localhost:8000/shepherd-score-alignment.html</code>.');
+      return;
+    }
+    window.setTimeout(function () {
+      if (!document.querySelector('#align .tv-canvas')) {
+        say('The scene is still loading, or it failed to start. It needs WebGL and a ' +
+            'connection to the three.js CDN — the browser console will say which.');
+      }
+    }, 15000);
+  }());
+</script>
+<script type="module">
+  import { mount, PHARM, REF_C, FIT_C } from './assets/js/align-viewer.js';
+
+  const data = window.SHEPHERD_ALIGN;
+  const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+  const rgb = (c) => `rgb(${c.map(v => Math.round(v * 255)).join(',')})`;
+  const sw = (color, label, cls = '') =>
+    `<li><span class="sw ${cls}" style="background:${color}"></span>${label}</li>`;
+
+  const NOTES = {
+    vol_noH: 'Volume: Gaussian overlap of heavy atoms.',
+    surf: 'Surface: Gaussian overlap of 200 surface points per molecule.',
+    pharm: 'Pharmacophores: overlap of same-type features, weighted by how well their vectors agree.',
+  };
+  const base = sw(hex(REF_C), 'Reference carbon') + sw(hex(FIT_C), 'Fit carbon');
+  const usedTypes = [...new Set([...data.ref.pharm.types, ...data.fit.pharm.types])].sort();
+  const LEGEND = {
+    vol_noH: base,
+    surf: base + sw(hex(REF_C), 'Reference surface', 'sw-sq') + sw(hex(FIT_C), 'Fit surface', 'sw-sq'),
+    pharm: base + usedTypes.map(t => sw(rgb(PHARM[t].c), PHARM[t].name)).join('') +
+      '<li>reference features faded</li>',
+  };
+
+  const scoreLine = (m) => {
+    const s = data.modes[m].scores;
+    return `${s[0].toFixed(2)} &rarr; ${s[s.length - 1].toFixed(2)} in ${s.length - 1} steps`;
+  };
+  document.getElementById('mols').innerHTML =
+    `Reference: <code>${data.info.ref_smiles}</code><br>` +
+    `Fit: <code>${data.info.fit_smiles}</code><br>` +
+    `Both from the MOSES test set. Volume ${scoreLine('vol_noH')}; surface ${scoreLine('surf')}; ` +
+    `pharmacophores ${scoreLine('pharm')}.`;
+
+  const box = document.getElementById('align');
+  const tabs = [...document.querySelectorAll('.tv-tab[data-mode]')];
+  const note = document.getElementById('mode-note');
+  const legend = document.getElementById('legend');
+  const show = (m) => {
+    tabs.forEach(t => t.setAttribute('aria-current', String(t.dataset.mode === m)));
+    note.textContent = NOTES[m];
+    legend.innerHTML = LEGEND[m];
+  };
+
+  const initial = (/^#(vol_noH|surf|pharm)$/.exec(location.hash) || [])[1] || 'vol_noH';
+  show(initial);
+  try {
+    const viewer = mount(box, data, { mode: initial });
+    tabs.forEach(t => t.addEventListener('click', () => {
+      const m = t.dataset.mode;
+      show(m);
+      viewer.setMode(m);
+      history.replaceState(null, '', '#' + m);
+    }));
+  } catch (err) {
+    console.error(err);
+    box.querySelector('.tv-stage').innerHTML =
+      '<p class="tv-fallback">Could not start the viewer. It needs WebGL and a ' +
+      'browser that supports ES modules.</p>';
+  }
+</script>
+</body>
+</html>

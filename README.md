@@ -64,8 +64,12 @@ Writes three payloads into `assets/data/`:
 - `evo-base.js` (~23 KB) — the protein CA trace plus the five static
   structures (fragments 8/10/12, the round-1 merge, the round-2 product).
   Loaded as a blocking script, since the first frame needs it.
-- `evo-traj-1.js`, `evo-traj-2.js` (~180 KB each) — the two generation
-  trajectories, fetched the first time their stage is opened.
+- `evo-traj-1.js`, `evo-traj-2.js` (~65 KB each) — the two generation
+  trajectories, fetched the first time their stage is opened. Atoms only:
+  the x3 and x4 channels denoise alongside them, but a half-noisy surface
+  reads as nothing and hides the molecule underneath it, so they are not
+  packed. The profiles that are shown are the fragments', which are a fixed
+  target and live in `evo-base.js`.
 
 The protein comes from `assets/data/8cnx_apo.pdb`. Only CA positions, the
 carbonyl direction that orients the ribbon, and a secondary-structure flag
@@ -90,6 +94,25 @@ python3 tools/build_traj.py <frame_dir> assets/data/traj-<name>.js \
 Unlike `build_evolution.py`, this re-centres on the final frame, which is what
 you want for a trajectory shown on its own. `--stride 3` keeps every third
 frame (~190 KB for 360 steps); the last frame is always kept.
+
+### shepherd-score alignment
+
+`shepherd-score-alignment.html` replays one single-start shepherd-score
+alignment in three representations (volume without H, surface, pharmacophores),
+with tabs to switch between them. Viewer: `assets/js/align-viewer.js`. Payload:
+`assets/data/align-82-99.js` (~44 KB), built from the trajectory dump that
+`gen_alignment_trajs.py` writes (one `mol<i>__mol<j>/` folder):
+
+```sh
+# needs rdkit + shepherd_score (the shepherdscore conda env)
+python tools/build_alignment.py <.../mol82__mol99> \
+    <.../moses_test_scaffold_molblock_charges.pkl> assets/data/align-82-99.js
+```
+
+The fit moves rigidly, so the payload stores it once in its start pose, plus
+one quaternion and translation per optimizer step (recovered by Kabsch from the
+dumped frames). Pharmacophores are recomputed from the molblocks; surface
+points are read from the BILD files, since sampling them is random.
 
 ### Local preview
 

@@ -142,6 +142,15 @@ def pack_structure(el, xyz, bonds, s3, s4, a4, center, pal):
 
 
 def pack_trajectory(frame_dir, stride, center, pal):
+    """Atoms only.
+
+    The x3 and x4 channels do denoise alongside the atoms, but a surface and a
+    set of pharmacophores that are still mostly noise say nothing a viewer can
+    read, and they bury the molecule they belong to.  The profiles that matter
+    are the fragments' -- those are a fixed target, and they are packed with
+    the static structures.  Dropping the diffusing ones here is also what takes
+    each trajectory from ~180 KB to a fraction of it.
+    """
     idx = sorted(int(re.search(r'(\d+)_frame_x1\.xyz$', p).group(1))
                  for p in glob.glob(os.path.join(frame_dir, '*_frame_x1.xyz')))
     if not idx:
@@ -152,54 +161,19 @@ def pack_trajectory(frame_dir, stride, center, pal):
         return np.round((np.asarray(p, dtype=np.float64) - center) * POS_SCALE).astype(np.int16)
 
     x1_counts, x1_elem, x1_pos = [], [], []
-    x3_pos, x3_esp, n3 = [], [], None
-    s_counts, s_col, s_pos, s_rad = [], [], [], []
-    a_counts, a_col, a_pos, a_dir, a_len = [], [], [], [], []
 
     for i in keep:
         s = f'{i:03d}'
         el, p1, _ = read_xyz(os.path.join(frame_dir, f'{s}_frame_x1.xyz'))
-        sph3, _ = read_bild(os.path.join(frame_dir, f'{s}_frame_x3.bild'))
-        sph4, arr4 = read_bild(os.path.join(frame_dir, f'{s}_frame_x4.bild'))
-        if n3 is None:
-            n3 = len(sph3)
-
         x1_counts.append(len(el))
         x1_elem.extend(pal.elem(e) for e in el)
         x1_pos.append(q(p1))
-
-        x3_pos.append(q([s_[1] for s_ in sph3]))
-        esp = np.array([s_[0][2] - s_[0][0] for s_ in sph3])
-        x3_esp.append(np.round(np.clip(esp, -1, 1) * 127).astype(np.int8))
-
-        s_counts.append(len(sph4))
-        for c, p, r in sph4:
-            s_col.append(pal.color(c)); s_pos.append(q(p)); s_rad.append(int(round(r * 50)))
-
-        a_counts.append(len(arr4))
-        for c, p0, p1_ in arr4:
-            v = np.array(p1_) - np.array(p0)
-            L = np.linalg.norm(v) or 1.0
-            a_col.append(pal.color(c)); a_pos.append(q(p0))
-            a_dir.append(np.round(v / L * 127).astype(np.int8))
-            a_len.append(int(min(255, round(L * 20))))
 
     return {
         'nframes': len(keep), 'srcFrames': len(idx), 'frameIndex': keep,
         'x1': {'counts': b64(np.array(x1_counts, np.uint16)),
                'elem': b64(np.array(x1_elem, np.uint8)),
                'pos': b64(np.concatenate(x1_pos))},
-        'x3': {'n': n3, 'pos': b64(np.concatenate(x3_pos)),
-               'esp': b64(np.concatenate(x3_esp))},
-        'x4s': {'counts': b64(np.array(s_counts, np.uint16)),
-                'col': b64(np.array(s_col, np.uint8)),
-                'rad': b64(np.array(s_rad, np.uint8)),
-                'pos': b64(np.array(s_pos, np.int16).reshape(-1, 3))},
-        'x4a': {'counts': b64(np.array(a_counts, np.uint16)),
-                'col': b64(np.array(a_col, np.uint8)),
-                'len': b64(np.array(a_len, np.uint8)),
-                'pos': b64(np.array(a_pos, np.int16).reshape(-1, 3)),
-                'dir': b64(np.array(a_dir, np.int8).reshape(-1, 3))},
     }
 
 

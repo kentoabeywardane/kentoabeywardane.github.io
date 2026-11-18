@@ -113,7 +113,9 @@
           aside. Their interaction profiles &mdash; the ESP surface and the typed
           pharmacophores &mdash; are what gets handed to the model, not their atoms.</li>
         <li><b>Merge round 1.</b> The joint reverse diffusion, conditioned on the combined
-          profile. Bonds are drawn from interatomic distances rather than predicted, which is
+          profile. Only the atoms are drawn: the molecule's own profile denoises alongside
+          them, but for most of the run it is still noise and only hides what it surrounds.
+          Bonds are drawn from interatomic distances rather than predicted, which is
           why they flicker early and only lock in once the geometry is chemically sensible;
           the atom count moves too, because composition is diffused along with coordinates.</li>
         <li><b>Generated merge.</b> The product over the two fragments it came from. Note
@@ -138,8 +140,9 @@
       </p>
       <p>
         The <b>Interaction profile</b> toggle shows x<sub>3</sub> and x<sub>4</sub> for
-        whichever structures the current stage is about. It comes on by itself at the stages
-        where the profile is the point, and off at the overlay stages, where the atoms are.
+        whichever structures the current stage is about. It comes on by itself where the
+        profile is the point, and off at the overlay stages, where the atoms are. At the two
+        generation stages it is greyed out: those carry atoms only.
       </p>
 
       <h3>A single trajectory, on its own</h3>
