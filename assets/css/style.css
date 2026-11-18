@@ -439,3 +439,13 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 /* A new section heading straight after a viewer (or its legend) needs room,
    so the next topic doesn't read as a caption for the pane above it. */
 .tv + h3, .tv-legend + h3 { margin-top: 2.6rem; }
+
+/* ============ sidebar demo quick links ============ */
+.profile-demos { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--sans); }
+.profile-demos-title { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 .5rem; }
+.profile-demos ul { list-style: none; padding: 0; margin: 0; }
+.profile-demos li { margin: 0 0 .35rem; font-size: .85rem; line-height: 1.35; }
+.profile-demos a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+@media screen and (max-width: 960px) {
+  .profile-demos { max-width: 320px; margin-left: auto; margin-right: auto; }
+}
