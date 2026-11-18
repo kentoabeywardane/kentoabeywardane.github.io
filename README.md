@@ -25,9 +25,12 @@ The site goes live at `https://kentoabeywardane.github.io` within a minute or tw
 
 ## Editing
 
-Everything is plain HTML in `index.html`, in document order: intro, featured research,
-publications, other projects, experience. Colors, spacing, and type live in the
-token block at the top of `style.css`.
+Plain HTML in `index.html`, in document order: profile sidebar, About Me, News,
+Featured Work, Publications, Other Projects, Background. Colors, spacing, and type
+live in the token block at the top of `style.css`.
 
-To add a CV: drop the PDF at `assets/Kento_Abeywardane_CV.pdf` and uncomment the CV
-link in the `.links` list in `index.html`.
+- **Photo:** save one as `assets/img/portrait.jpg` and swap the `<div class="avatar monogram">`
+  for the commented-out `<img class="avatar" ...>` right above it.
+- **CV:** drop the PDF at `assets/Kento_Abeywardane_CV.pdf` and uncomment the CV link
+  in `.profile-links`.
+- **News:** newest first; keep it to about five items.
