@@ -39,24 +39,24 @@ const CARBON = {
 /* lead = what the stage is about, drawn solid and allowed to show its profile.
    refs = context, drawn as ghosts with no profile of their own. */
 const STAGES = [
-  { label: 'Fragments bound', lead: ['frag8', 'frag10', 'frag12'], refs: [],
+  { label: 'Bound fragments', lead: ['frag8', 'frag10', 'frag12'], refs: [],
     profiles: false, wide: true,
-    note: 'A fragment screen against the D68 3C protease: several fragments soak into the same pocket, each making only a few contacts.' },
-  { label: 'Pick 8 and 10', lead: ['frag8', 'frag10'], refs: ['frag12'],
+    note: 'A fragment screen against the D68 3C protease: three fragments soak into the same pocket, each making only a few contacts.' },
+  { label: 'Pick 1 and 2', lead: ['frag8', 'frag10'], refs: [],
     profiles: true,
-    note: 'Fragments 8 and 10 occupy neighbouring subsites. Their interaction profiles — ESP surface and pharmacophores — are extracted and combined into one target.' },
-  { label: 'Generate the merge', traj: 't1', lead: ['t1'], refs: ['frag8', 'frag10'],
+    note: 'Fragments 1 and 2 occupy neighbouring subsites. Fragment 3 is set aside. The interaction profiles of the two — ESP surface and pharmacophores — are extracted and combined into one target.' },
+  { label: 'Merge round 1', traj: 't1', lead: ['t1'], refs: ['frag8', 'frag10'],
     profiles: true,
-    note: 'ShEPhERD-2 denoises a molecule and its interaction profile together, conditioned on the combined profile of 8 and 10.' },
-  { label: 'Merge vs. 8 + 10', lead: ['merged1'], refs: ['frag8', 'frag10'],
+    note: 'ShEPhERD-2 denoises a molecule and its interaction profile together, conditioned on the combined profile of fragments 1 and 2.' },
+  { label: 'Generated merge', lead: ['merged1'], refs: ['frag8', 'frag10'],
     profiles: false,
     note: 'The generated molecule against the two fragments it was asked to reproduce. It is not a linker between them — it is one scaffold that lands the same contacts.' },
-  { label: 'Bring in 12', lead: ['merged1'], refs: ['frag12'],
+  { label: 'Pick 3', lead: ['merged1'], refs: ['frag12'],
     profiles: false,
-    note: 'Fragment 12 binds an adjacent subsite the round-one molecule does not reach. Its profile is added to the target.' },
-  { label: 'Generate round 2', traj: 't2', lead: ['t2'], refs: ['merged1', 'frag12'],
+    note: 'Fragment 3 binds an adjacent subsite the round-one molecule does not reach. Its profile is added to the target.' },
+  { label: 'Merge round 2', traj: 't2', lead: ['t2'], refs: ['merged1', 'frag12'],
     profiles: true,
-    note: 'A second generation, conditioned on the round-one molecule plus fragment 12 — the merged product goes back into the model as input.' },
+    note: 'A second generation, conditioned on the round-one molecule plus fragment 3 — the merged product goes back into the model as input.' },
   { label: 'Final molecule', lead: ['merged2'], refs: ['frag8', 'frag10', 'frag12'],
     profiles: false,
     note: 'The round-two product over all three starting fragments: one molecule covering three fragment subsites.' },
@@ -103,11 +103,16 @@ export function mount(box, base, opts = {}) {
   scene.add(root);
 
   /* ---------- protein ---------- */
-  const ribbonGeom = buildRibbon(base.protein);
+  /* farA is generous because only the outer wall of the tube is drawn now:
+     the far side of the fold has to carry itself on one layer, not two */
+  const ribbonGeom = buildRibbon(base.protein, { nearR: 12, farR: 34, farA: 0.58 });
   const ribbonMat = new THREE.MeshStandardMaterial({
     color: 0xcfd4dc, roughness: 0.62, metalness: 0.0,
     transparent: true, opacity: 0.3, depthWrite: false,
-    side: THREE.DoubleSide, vertexColors: true,
+    /* the tube is closed and wound outward, so only its outer wall is drawn:
+       a DoubleSide translucent tube blends its own back wall over its front
+       and every crossing of the chain reads twice as dark as it should */
+    side: THREE.FrontSide, vertexColors: true,
   });
   const ribbon = new THREE.Mesh(ribbonGeom, ribbonMat);
   ribbon.renderOrder = 10;           /* after the molecules, so it tints them */
@@ -152,7 +157,14 @@ export function mount(box, base, opts = {}) {
   let pocketR = 1;
   for (const a of Object.values(actors)) pocketR = Math.max(pocketR, a.radius(0, true));
   const POCKET_DIST = fitDist(pocketR);
-  const WIDE_DIST = fitDist(proteinRadius * 0.92);
+  /* The opening shot frames the whole fold with the pocket sitting low and
+     centre, which is where the site lands when the camera looks at the
+     protein's own centre from outside.  Cropping below the bounding radius
+     lets the fold fill the frame rather than float in it. */
+  const WIDE_DIST = fitDist(proteinRadius * 0.88);
+  /* not quite the protein's centre: pulled a little toward the pocket, which
+     lifts the fragments off the bottom edge without losing the whole fold */
+  const WIDE_TARGET = proteinCenter.clone().multiplyScalar(0.72);
 
   /* Opening direction: look into the pocket from outside the protein, then
      nudge within a cap of that to the angle that piles the final molecule's
@@ -229,7 +241,7 @@ export function mount(box, base, opts = {}) {
     for (const k of st.refs) want[k].mol = REF_OPACITY;
     /* The wide shot is the one place the whole fold should read; up close the
        ribbon is backdrop and must not wash the molecules out. */
-    wantRibbon = showProtein ? (st.wide ? 0.5 : 0.28) : 0;
+    wantRibbon = showProtein ? (st.wide ? 0.55 : 0.38) : 0;
   }
 
   function applyOpacity(k, o) {
@@ -248,7 +260,7 @@ export function mount(box, base, opts = {}) {
     showProfiles = st.profiles;
     refreshTargets();
     wantDist = st.wide ? WIDE_DIST : POCKET_DIST;
-    wantTarget.copy(st.wide ? proteinCenter : ZERO);
+    wantTarget.copy(st.wide ? WIDE_TARGET : ZERO);
     /* Only a stage change may move the camera.  Once it has arrived the tween
        switches itself off, so a viewer's own zoom is not dragged back. */
     camAnim = true;

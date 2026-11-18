@@ -366,7 +366,8 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 }
 .evo-slider {
   flex: 1 1 4rem; min-width: 2rem; margin: 0;
-  accent-color: var(--link); cursor: pointer;
+  /* the track itself stays thin; the taller element is there to be grabbed */
+  height: 1.5rem; accent-color: var(--link); cursor: pointer;
 }
 .evo-stage.is-active .evo-slider { accent-color: var(--bg); }
 .evo-step {

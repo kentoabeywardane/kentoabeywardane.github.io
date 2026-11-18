@@ -90,9 +90,9 @@
       </div>
 
       <ul class="tv-legend">
-        <li><span class="sw" style="background:#2f9e8f"></span>Fragment 8</li>
-        <li><span class="sw" style="background:#d4902f"></span>Fragment 10</li>
-        <li><span class="sw" style="background:#9478cf"></span>Fragment 12</li>
+        <li><span class="sw" style="background:#2f9e8f"></span>Fragment 1</li>
+        <li><span class="sw" style="background:#d4902f"></span>Fragment 2</li>
+        <li><span class="sw" style="background:#9478cf"></span>Fragment 3</li>
         <li><span class="sw" style="background:#4c5057"></span>Generated molecule</li>
         <li><span class="sw sw-grad"></span>ESP surface (x<sub>3</sub>): negative &rarr; positive</li>
       </ul>
@@ -105,24 +105,24 @@
 
       <h3>What each stage shows</h3>
       <ol class="stage-list">
-        <li><b>Fragments bound.</b> Three fragments from a crystallographic screen, each
-          sitting in the same pocket and each making only a handful of contacts. The ribbon
-          is the apo protein; it fades out with distance from the site so it stays context
-          rather than clutter.</li>
-        <li><b>Pick 8 and 10.</b> These two occupy neighbouring subsites. Their interaction
-          profiles &mdash; the ESP surface and the typed pharmacophores &mdash; are what gets
-          handed to the model, not their atoms.</li>
-        <li><b>Generate the merge.</b> The joint reverse diffusion, conditioned on the combined
+        <li><b>Bound fragments.</b> Three fragments from a crystallographic screen (8, 10 and
+          12 in the screen's own numbering, called 1, 2 and 3 here), each sitting in the same
+          pocket and each making only a handful of contacts. The ribbon is the apo protein;
+          it fades out with distance from the site so it stays context rather than clutter.</li>
+        <li><b>Pick 1 and 2.</b> These two occupy neighbouring subsites; the third is set
+          aside. Their interaction profiles &mdash; the ESP surface and the typed
+          pharmacophores &mdash; are what gets handed to the model, not their atoms.</li>
+        <li><b>Merge round 1.</b> The joint reverse diffusion, conditioned on the combined
           profile. Bonds are drawn from interatomic distances rather than predicted, which is
           why they flicker early and only lock in once the geometry is chemically sensible;
           the atom count moves too, because composition is diffused along with coordinates.</li>
-        <li><b>Merge vs. 8 + 10.</b> The product over the two fragments it came from. Note
+        <li><b>Generated merge.</b> The product over the two fragments it came from. Note
           that it isn't a linker bridging them &mdash; it's a single scaffold that happens to
           land the same contacts.</li>
-        <li><b>Bring in 12.</b> A third fragment occupying a subsite the round-one molecule
+        <li><b>Pick 3.</b> The third fragment occupies a subsite the round-one molecule
           doesn't reach.</li>
-        <li><b>Generate round 2.</b> The round-one product goes back in as input, together
-          with fragment 12's profile.</li>
+        <li><b>Merge round 2.</b> The round-one product goes back in as input, together
+          with fragment 3's profile.</li>
         <li><b>Final molecule.</b> One molecule over all three starting fragments.</li>
       </ol>
 
