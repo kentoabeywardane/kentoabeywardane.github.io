@@ -9,8 +9,10 @@
   --rule: #e6e6e3;
   --tile: #f3f3f0;
   --figure-bg: #ffffff;
-  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Swap --serif for a different face to restyle the whole page.
+     Friendly alternatives: "DM Sans", "Karla", "Nunito Sans", "Work Sans". */
+  --serif: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --sans: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -38,8 +40,9 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--serif);
-  font-size: 17px;
-  line-height: 1.6;
+  font-size: 16.5px;
+  line-height: 1.62;
+  letter-spacing: -0.003em;
   -webkit-font-smoothing: antialiased;
 }
 p { margin: 0 0 1rem; }
@@ -53,10 +56,10 @@ a:hover { text-decoration: underline; }
 h2 {
   font-family: var(--serif);
   color: var(--accent);
-  font-size: 1.5rem; font-weight: 600; line-height: 1.2;
+  font-size: 1.45rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em;
   margin: 0 0 .9rem;
 }
-h3 { font-family: var(--serif); color: var(--fg-strong); font-size: 1.15rem; font-weight: 600; margin: 0 0 .15rem; }
+h3 { font-family: var(--serif); color: var(--fg-strong); font-size: 1.12rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 .15rem; }
 h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 .muted { color: var(--muted); }
 .small { font-size: .88rem; }
@@ -80,9 +83,9 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 .monogram {
   display: flex; align-items: center; justify-content: center;
   background: var(--tile); color: var(--accent);
-  font-family: var(--serif); font-size: 2.6rem; letter-spacing: .02em;
+  font-family: var(--serif); font-size: 2.5rem; font-weight: 600; letter-spacing: .01em;
 }
-.profile-name { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--fg-strong); margin: 0 0 .1rem; line-height: 1.25; }
+.profile-name { font-family: var(--serif); font-size: 1.3rem; font-weight: 700; letter-spacing: -0.015em; color: var(--fg-strong); margin: 0 0 .1rem; line-height: 1.25; }
 .profile-role { margin: 0 0 .35rem; }
 .profile-affil { font-size: .95rem; margin: 0 0 .6rem; line-height: 1.45; }
 .profile-mail { font-family: var(--sans); font-size: .85rem; margin: 0 0 1rem; }
@@ -127,14 +130,11 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 .teaser img { max-height: 84px; width: auto; object-fit: contain; }
 .teaser .badge { position: absolute; top: -.45rem; left: -.3rem; }
 .teaser-text { background: var(--tile); font-family: var(--serif); color: var(--muted); font-size: 1rem; text-align: center; line-height: 1.25; }
-.pub-title { font-weight: 600; color: var(--fg-strong); margin: 0 0 .15rem; line-height: 1.35; }
+.pub-title { font-weight: 600; letter-spacing: -0.008em; color: var(--fg-strong); margin: 0 0 .15rem; line-height: 1.35; }
 .pub-title a { color: inherit; }
 .pub-title a:hover { color: var(--link); text-decoration: none; }
 .pub-authors { font-size: .92rem; margin: 0 0 .1rem; }
 .pub-venue { font-size: .92rem; color: var(--muted); margin: 0; }
-.prep { list-style: none; padding: 0; margin: 0; }
-.prep li { margin-bottom: .9rem; }
-.prep .pub-title { font-weight: 400; }
 
 /* ============ projects ============ */
 .projects { list-style: none; padding: 0; margin: 0; }
