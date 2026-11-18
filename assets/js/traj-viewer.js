@@ -161,7 +161,11 @@ export function mount(box, data, opts = {}) {
       /* Look down the plane normal, then tilt off it so the view reads as 3D.
          The tilt is about the long axis, which keeps that axis across frame. */
       const TILT = THREE.MathUtils.degToRad(opts.tilt ?? 22);
-      HOME.copy(ax.normal).applyAxisAngle(ax.major, TILT).multiplyScalar(DIST);
+      /* The plane has two faces and the eigenvector's sign is arbitrary;
+         opts.side picks which one to open on. */
+      const SIDE = opts.side ?? -1;
+      HOME.copy(ax.normal).multiplyScalar(SIDE)
+          .applyAxisAngle(ax.major, TILT).multiplyScalar(DIST);
       HOME_UP.copy(ax.mid).applyAxisAngle(ax.major, TILT).normalize();
     }
   }
