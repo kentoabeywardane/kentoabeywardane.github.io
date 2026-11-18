@@ -23,7 +23,7 @@
   <link rel="modulepreload" href="assets/js/align-viewer.js">
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" crossorigin>
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/TrackballControls.js" crossorigin>
-  <!-- 44 KB: both molecules plus every step of all three runs. -->
+  <!-- 59 KB: both molecules, the avoid wall, and every step of all four runs. -->
   <script src="assets/data/align-82-99.js"></script>
 
   <style>
@@ -35,6 +35,8 @@
       font-size: .95rem; font-weight: 600; color: var(--fg-strong);
       font-variant-numeric: tabular-nums; min-width: 3.2em;
     }
+    .av-score-pen { font-variant-numeric: tabular-nums; }
+    .av-zero { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 3; }
     .av-score-best { margin-left: auto; font-variant-numeric: tabular-nums; }
     .av-spark { position: relative; height: 56px; cursor: crosshair; touch-action: none; }
     .av-spark svg { display: block; width: 100%; height: 100%; overflow: visible; }
@@ -94,11 +96,13 @@
         Aligning molecules in 3D to measure their similarity is a core operation in cheminformatics.
         <a href="https://shepherd-score.readthedocs.io/">ShEPhERD-score</a> provides differentiable 3D similarity functions for
         scoring and alignment across shape, electrostatic potential (ESP), pharmacophores, and their combinations.
-        Below, we demonstrate the rigid alignment of two molecules using three representations: volumetric shape, solvent-accessible surface, and pharmacophores.
+        Below, we demonstrate the rigid alignment of two molecules using three representations: volumetric shape,
+        volumetric shape with avoid points, solvent-accessible surface, and pharmacophores.
       </p>
 
       <div class="tv-tabs" role="group" aria-label="Representation used for alignment">
         <button class="tv-tab" type="button" data-mode="vol_noH" aria-current="true">Volume</button>
+        <button class="tv-tab" type="button" data-mode="vol_avoid">Volume + avoid</button>
         <button class="tv-tab" type="button" data-mode="surf">Surface</button>
         <button class="tv-tab" type="button" data-mode="pharm">Pharmacophores</button>
       </div>
@@ -152,7 +156,7 @@
   }());
 </script>
 <script type="module">
-  import { mount, PHARM, REF_C, FIT_C } from './assets/js/align-viewer.js';
+  import { mount, PHARM, REF_C, FIT_C, AVOID_C } from './assets/js/align-viewer.js';
 
   const data = window.SHEPHERD_ALIGN;
   const hex = (n) => '#' + n.toString(16).padStart(6, '0');
@@ -162,6 +166,7 @@
 
   const NOTES = {
     vol_noH: 'Volume: Gaussian overlap of heavy atoms.',
+    vol_avoid: 'Volume + avoid: Gaussian overlap with a clash penalty for avoid points. The best volumetric-only pose would clash so it settles into a flipped overlay instead.',
     surf: 'Surface: Gaussian overlap of points sampled on the solvent-accessible surface.',
     pharm: 'Pharmacophores: Gaussian overlap of same-type features, weighted by vector similarity.',
   };
@@ -169,6 +174,7 @@
   const usedTypes = [...new Set([...data.ref.pharm.types, ...data.fit.pharm.types])].sort();
   const LEGEND = {
     vol_noH: base,
+    vol_avoid: base + sw(hex(AVOID_C), 'Avoid points'),
     surf: base + sw(hex(REF_C), 'Reference surface', 'sw-sq') + sw(hex(FIT_C), 'Fit surface', 'sw-sq'),
     pharm: base + usedTypes.map(t => sw(rgb(PHARM[t].c), PHARM[t].name)).join('') +
       '<li>reference features faded</li>',
@@ -181,7 +187,7 @@
   document.getElementById('mols').innerHTML =
     `Reference: <code>${data.info.ref_smiles}</code><br>` +
     `Fit: <code>${data.info.fit_smiles}</code><br>` +
-    `Volume ${scoreLine('vol_noH')}; surface ${scoreLine('surf')}; ` +
+    `Volume ${scoreLine('vol_noH')}; volume + avoid ${scoreLine('vol_avoid')}; surface ${scoreLine('surf')}; ` +
     `pharmacophores ${scoreLine('pharm')}.`;
 
   const box = document.getElementById('align');
@@ -194,7 +200,7 @@
     legend.innerHTML = LEGEND[m];
   };
 
-  const initial = (/^#(vol_noH|surf|pharm)$/.exec(location.hash) || [])[1] || 'vol_noH';
+  const initial = (/^#(vol_noH|vol_avoid|surf|pharm)$/.exec(location.hash) || [])[1] || 'vol_noH';
   show(initial);
   try {
     const viewer = mount(box, data, { mode: initial });

@@ -1,9 +1,11 @@
 /* shepherd-score alignment viewer --------------------------------------------
    Plays back a recorded single-start alignment: a reference molecule stays put
    while a fit molecule is moved rigidly by the optimizer, one Adam step per
-   frame, maximising one of three overlap scores.
+   frame, maximising one of four overlap scores.
 
-     vol_noH  Gaussian volume overlap of heavy atoms     (atoms only, no H)
+     vol_noH    Gaussian volume overlap of heavy atoms   (atoms only, no H)
+     vol_avoid  the same, minus a hard-sphere clash penalty against a fixed
+                wall of avoid points                     (atoms + wall)
      surf     Gaussian overlap of surface point clouds   (atoms + surface points)
      pharm    vector-aware pharmacophore overlap         (atoms + pharmacophores)
 
@@ -35,6 +37,8 @@ export const REF_C = 0xa9aeb6;
 export const FIT_C = 0x8a6fd8;
 export const SURF_REF = 0xa9aeb6;
 export const SURF_FIT = 0x8a6fd8;
+/* the vol_avoid wall: a warm sand, apart from every element and the fit */
+export const AVOID_C = 0xc08a5b;
 
 /* shepherd_score pharmacophore palette, indexed like P_TYPES.  Hydrophobe is
    lifted from (0.2,0.2,0.2) so a translucent sphere survives a dark page. */
@@ -51,7 +55,8 @@ export const PHARM = [
 const VECTOR_TYPES = new Set([0, 1, 2, 4]);   /* drawn as arrows, not spheres */
 const VEC_SCALE = 2;                           /* as in the ChimeraX export */
 
-const MODES = ['vol_noH', 'surf', 'pharm'];
+const MODES = ['vol_noH', 'vol_avoid', 'surf', 'pharm'];
+const HEAVY_ONLY = new Set(['vol_noH', 'vol_avoid']);
 
 export function mount(box, data, opts = {}) {
   const stage = box.querySelector('.tv-stage');
@@ -65,6 +70,7 @@ export function mount(box, data, opts = {}) {
       q: d.quat.map(q => new THREE.Quaternion(q[0], q[1], q[2], q[3])),
       t: d.trans.map(vec),
       s: d.scores,
+      sim: d.similarity, pen: d.penalty,
       n: d.scores.length,
     };
   }
@@ -74,7 +80,7 @@ export function mount(box, data, opts = {}) {
      its surface, and the fit at its start pose and at each mode's end pose. */
   let fitR = 1;
   const grow = (p) => { fitR = Math.max(fitR, p.length()); };
-  for (const p of [...data.ref.pos, ...data.ref.surf]) grow(vec(p));
+  for (const p of [...data.ref.pos, ...data.ref.surf, ...(data.avoid || [])]) grow(vec(p));
   for (const m of MODES) {
     const P = poses[m], last = P.n - 1;
     for (const f of [0, last]) for (const p of [...data.fit.pos, ...data.fit.surf]) {
@@ -95,11 +101,16 @@ export function mount(box, data, opts = {}) {
     data.fit.pos.forEach((p, i) => {
       if (data.fit.elements[i] !== 'H') pts.push(vec(p).applyQuaternion(V.q[last]).add(V.t[last]));
     });
+    /* look across the avoid wall, not through it, so it reads as one side of
+       a pocket: only directions within ~20 deg of side-on to its axis */
+    const wall = (data.avoid || []).reduce((s, p) => s.add(vec(p)), new THREE.Vector3());
+    const wallAxis = wall.lengthSq() > 1e-6 ? wall.normalize() : null;
     let best = null, bestC = Infinity;
     const golden = Math.PI * (3 - Math.sqrt(5)), N = 400, a = new THREE.Vector3();
     for (let k = 0; k < N; k++) {           /* Fibonacci hemisphere */
       const z = 1 - k / N, rr = Math.sqrt(1 - z * z), th = k * golden;
       const dir = new THREE.Vector3(Math.cos(th) * rr, Math.sin(th) * rr, z);
+      if (wallAxis && Math.abs(dir.dot(wallAxis)) > 0.35) continue;
       let c = 0;
       for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
         a.subVectors(pts[i], pts[j]);
@@ -253,6 +264,22 @@ export function mount(box, data, opts = {}) {
   const fit = buildMolecule(data.fit, FIT_C, SURF_FIT, true);
   root.add(ref.group, fit.group);
 
+  /* vol_avoid wall: a solid core per point inside a faint shell of radius
+     1 A, half the 2 A distance at which the clash penalty starts */
+  const avoid = new THREE.Group();
+  {
+    const pts = (data.avoid || []).map(vec);
+    const core = inst(new THREE.SphereGeometry(1, 18, 12), mkMat({ color: AVOID_C }), pts.length);
+    const shell = inst(new THREE.SphereGeometry(1, 24, 16),
+      mkMat({ color: AVOID_C, transparent: true, opacity: 0.18, depthWrite: false }), pts.length);
+    pts.forEach((p, k) => {
+      M.compose(p, Q.identity(), new THREE.Vector3(0.3, 0.3, 0.3)); core.setMatrixAt(k, M);
+      M.compose(p, Q.identity(), ONE); shell.setMatrixAt(k, M);
+    });
+    avoid.add(core, shell);
+  }
+  root.add(avoid);
+
   const controls = new TrackballControls(camera, renderer.domElement);
   controls.rotateSpeed = 3.2;
   controls.zoomSpeed = 1.1;
@@ -277,11 +304,13 @@ export function mount(box, data, opts = {}) {
       <div class="av-score-head">
         <span class="av-score-label">Similarity</span>
         <span class="av-score-val">0.000</span>
+        <span class="av-score-pen" hidden></span>
         <span class="av-score-best"></span>
       </div>
       <div class="av-spark" role="img">
         <svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
           <line class="av-grid" x1="0" x2="1000" y1="100" y2="100"/>
+          <line class="av-zero" x1="0" x2="1000"/>
           <line class="av-best" x1="0" x2="1000"/>
           <polyline class="av-line" fill="none"/>
           <line class="av-cursor" y1="0" y2="100"/>
@@ -303,7 +332,8 @@ export function mount(box, data, opts = {}) {
   const slider = $('.tv-slider'), playBtn = $('.tv-play'), stepOut = $('.tv-step'),
         speedSel = $('.tv-speed'), scoreVal = $('.av-score-val'), bestOut = $('.av-score-best'),
         spark = $('.av-spark'), line = $('.av-line'), bestLine = $('.av-best'),
-        cursor = $('.av-cursor'), dot = $('.av-dot'), tip = $('.av-tip');
+        cursor = $('.av-cursor'), dot = $('.av-dot'), tip = $('.av-tip'),
+        scoreLabel = $('.av-score-label'), penOut = $('.av-score-pen'), zeroLine = $('.av-zero');
 
   /* ---------- state ---------- */
   let mode = MODES.includes(opts.mode) ? opts.mode : 'vol_noH';
@@ -311,21 +341,29 @@ export function mount(box, data, opts = {}) {
   let playing = false, speed = 1, last = 0;
   const FPS = 30;
   const P = () => poses[mode];
-  /* score axis is fixed at 0..0.8 for every mode so the three runs compare at a
-     glance; no score in this payload comes close to the top */
+  /* score axis tops out at 0.8 for every mode so the runs compare at a glance
+     (no score here comes close).  It starts at 0, except for vol_avoid, whose
+     score goes negative while the fit still clashes with the wall. */
   const Y_MAX = 0.8;
-  const yOf = (s) => 100 - Math.min(1, s / Y_MAX) * 100;
+  let yMin = 0;
+  const yOf = (s) => 100 - Math.max(0, Math.min(1, (s - yMin) / (Y_MAX - yMin))) * 100;
 
   function applyLayers() {
     for (const m of [ref, fit]) {
-      m.hydrogens.visible = mode !== 'vol_noH';
+      m.hydrogens.visible = !HEAVY_ONLY.has(mode);
       m.surf.visible = mode === 'surf';
       m.pharm.visible = mode === 'pharm';
     }
+    avoid.visible = mode === 'vol_avoid';
+    scoreLabel.textContent = mode === 'vol_avoid' ? 'Overlap \u2212 clash' : 'Similarity';
+    penOut.hidden = !P().pen;
   }
 
   function drawSpark() {
     const { s, n } = P();
+    yMin = Math.min(0, Math.floor(Math.min(...s) * 10) / 10);
+    zeroLine.setAttribute('y1', yOf(0)); zeroLine.setAttribute('y2', yOf(0));
+    zeroLine.style.display = yMin < 0 ? '' : 'none';
     line.setAttribute('points', s.map((v, i) => `${(i / (n - 1)) * 1000},${yOf(v)}`).join(' '));
     const best = data.info.library_best[mode];
     bestLine.setAttribute('y1', yOf(best)); bestLine.setAttribute('y2', yOf(best));
@@ -336,7 +374,7 @@ export function mount(box, data, opts = {}) {
 
   const qTmp = new THREE.Quaternion();
   function setPos(p, fromSlider) {
-    const { q, t, s, n } = P();
+    const { q, t, s, n, pen } = P();
     pos = Math.max(0, Math.min(n - 1, p));
     const i = Math.min(n - 2, Math.floor(pos)), f = pos - i;
     qTmp.slerpQuaternions(q[i], q[i + 1], f);
@@ -347,6 +385,7 @@ export function mount(box, data, opts = {}) {
     if (!fromSlider) slider.value = k;
     stepOut.textContent = `step ${k} / ${n - 1}`;
     scoreVal.textContent = sc.toFixed(3);
+    if (pen) penOut.textContent = `clash ${(pen[i] + (pen[i + 1] - pen[i]) * f).toFixed(2)}`;
     const x = (pos / (n - 1)) * 100;
     cursor.setAttribute('x1', x * 10); cursor.setAttribute('x2', x * 10);
     dot.style.left = `${x}%`;
@@ -389,9 +428,10 @@ export function mount(box, data, opts = {}) {
     return Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (P().n - 1));
   };
   const showTip = (k) => {
-    const { s, n } = P();
+    const { s, n, sim, pen } = P();
     tip.hidden = false;
-    tip.textContent = `step ${k} · ${s[k].toFixed(3)}`;
+    tip.textContent = `step ${k} · ${s[k].toFixed(3)}` +
+      (pen ? ` (overlap ${sim[k].toFixed(2)} \u2212 clash ${pen[k].toFixed(2)})` : '');
     const x = (k / (n - 1)) * 100;
     tip.style.left = `${x}%`;
     tip.style.transform = `translateX(${x > 70 ? '-100%' : x < 30 ? '0' : '-50%'})`;

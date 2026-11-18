@@ -8,6 +8,8 @@ Usage (needs rdkit + shepherd_score, e.g. the shepherdscore conda env):
 <pair_dir> is a ``mol<i>__mol<j>/`` folder written by gen_alignment_trajs.py:
   info.json, ref_x1.xyz, ref_x3.bild
   vol_noH/NNN_frame_x1.xyz (heavy atoms)    scores.json
+  vol_avoid/NNN_frame_x1.xyz (heavy atoms)  scores.json (+ similarity, penalty)
+  avoid_points.xyz                          (vol_avoid exclusion wall; add_vol_avoid.py)
   surf/NNN_frame_x1.xyz, NNN_frame_x3.bild  scores.json
   pharm/NNN_frame_x1.xyz                    scores.json
 
@@ -24,7 +26,8 @@ from rdkit import Chem
 from scipy.spatial.transform import Rotation
 from shepherd_score.container import Molecule
 
-MODES = ('vol_noH', 'surf', 'pharm')
+MODES = ('vol_noH', 'vol_avoid', 'surf', 'pharm')
+HEAVY_ONLY = ('vol_noH', 'vol_avoid')
 
 
 def read_xyz(path):
@@ -98,7 +101,7 @@ def main():
     modes = {}
     for mode in MODES:
         d = os.path.join(a.pair_dir, mode)
-        start = fit_pos[heavy] if mode == 'vol_noH' else fit_pos
+        start = fit_pos[heavy] if mode in HEAVY_ONLY else fit_pos
         quat, trans, err = [], [], 0.0
         for p in frames(d):
             _, X = read_xyz(p)
@@ -106,9 +109,12 @@ def main():
             err = max(err, float(np.abs(start @ R.T + t - X).max()))
             quat.append(r(Rotation.from_matrix(R).as_quat(), 5))
             trans.append(r(t, 4))
-        scores = json.load(open(os.path.join(d, 'scores.json')))['scores']
+        sj = json.load(open(os.path.join(d, 'scores.json')))
+        scores = sj['scores']
         assert len(scores) == len(quat), (mode, len(scores), len(quat))
         modes[mode] = dict(quat=quat, trans=trans, scores=r(scores, 4))
+        if 'penalty' in sj:
+            modes[mode].update(similarity=r(sj['similarity'], 4), penalty=r(sj['penalty'], 4))
         print(f'{mode:8s} {len(quat):3d} frames  score {scores[0]:.3f} -> {scores[-1]:.3f}  max Kabsch residual {err:.1e} A')
 
     out = dict(
@@ -117,6 +123,7 @@ def main():
         ref=mol_json(ref_mol, ref_pos, ref_m, ref_surf),
         fit=mol_json(fit_mol, fit_pos, fit_m, fit_surf),
         modes=modes,
+        avoid=r(read_xyz(os.path.join(a.pair_dir, 'avoid_points.xyz'))[1]),
     )
     js = f'window.{a.var} = {json.dumps(out, separators=(",", ":"))};\n'
     open(a.out, 'w').write(js)
