@@ -191,7 +191,7 @@
       const m = /^#stage-(\d)$/.exec(location.hash);
       /* landing straight on a stage shows it at once; a hash change made while
          the page is open still dissolves across like any other stage change */
-      if (m) evo.goTo(Math.max(0, Math.min(6, +m[1] - 1)), { snap: firstHash });
+      if (m) evo.goTo(Math.max(0, Math.min(5, +m[1] - 1)), { snap: firstHash });
       firstHash = false;
     };
     fromHash();

@@ -1,9 +1,9 @@
 /* Ligand evolution viewer -----------------------------------------------------
-   One scene, seven stages.  Rather than three unrelated trajectories behind
+   One scene, six stages.  Rather than three unrelated trajectories behind
    three tabs, this walks a single story: crystallographic fragments bound to
    a protein, two of them chosen and their interaction profiles extracted, a
-   molecule generated to merge those profiles, the product checked against the
-   fragments it came from, a third fragment brought in, a second generation,
+   molecule generated to merge those profiles, a third fragment brought in, a
+   second generation,
    and the final molecule over all three.
 
    Every structure lives in the 8CNX crystal frame, so nothing is re-centred
@@ -48,9 +48,6 @@ const STAGES = [
   { label: 'Merge round 1', traj: 't1', lead: ['t1'], refs: ['frag8', 'frag10'],
     profiles: false,
     note: 'ShEPhERD-2 denoises the molecule and its interaction profile together, conditioned on the combined profile of fragments 1 and 2. Only the atoms are drawn here — the profile is still noise for most of the run.' },
-  { label: 'Generated merge', lead: ['merged1'], refs: ['frag8', 'frag10'],
-    profiles: false,
-    note: 'The generated molecule against the two fragments it was asked to reproduce. It is not a linker between them — it is one scaffold that lands the same contacts.' },
   { label: 'Pick 3', lead: ['merged1'], refs: ['frag12'],
     profiles: false,
     note: 'Fragment 3 binds an adjacent subsite the round-one molecule does not reach. Its profile is added to the target.' },

@@ -280,7 +280,7 @@ h3.sub { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .75rem; }
 .btn-lead { border-color: var(--link); color: var(--link); font-weight: 500; }
 
 /* ============ ligand evolution viewer ============
-   A seven-stage timeline where two of the stages are animations.  Those two
+   A six-stage timeline where two of the stages are animations.  Those two
    carry a slider that lives as a thumbnail progress bar while the stage is
    closed and widens into a usable control when it opens, so the whole story
    stays on one line and the stage you are actually in gets the room. */
